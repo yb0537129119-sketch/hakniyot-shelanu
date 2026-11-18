@@ -1,11 +1,11 @@
 const families=["משפחת עמר","משפחת בן גיגי","משפחת זכאי","משפחת עוזר","ינון"];
 const quick=["🥛 חלב","🍞 לחם","🥚 ביצים","🧀 גבינה","🍅 עגבניות","🥒 מלפפונים","🍌 בננות","🍎 תפוחים","🧻 נייר טואלט","🧼 נוזל כלים","🍗 עוף","🍚 אורז"];
-let family=localStorage.getItem("family"), current=null, listsCache=[];
+let family=localStorage.getItem("family"), password=localStorage.getItem("familyPassword"), selectedFamily=null, current=null, listsCache=[];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 async function api(path,method="GET",body=null){
-  const url=method==="GET"?path+"?family="+encodeURIComponent(family):path;
-  const res=await fetch(url,{method,headers:{"Content-Type":"application/json"},...(body?{body:JSON.stringify({...body,family})}:{})});
+  const url=method==="GET"?path+"?family="+encodeURIComponent(family)+"&password="+encodeURIComponent(password||""):path;
+  const res=await fetch(url,{method,headers:{"Content-Type":"application/json"},...(body?{body:JSON.stringify({...body,family,password})}:{})});
   const data=await res.json().catch(()=>({}));
   if(!res.ok)throw new Error(data.error||"שגיאה בחיבור");
   return data;
@@ -13,12 +13,12 @@ async function api(path,method="GET",body=null){
 function showLogin(){$("login").classList.remove("hidden");$("app").classList.add("hidden");$("logout").classList.add("hidden");}
 function renderFamilies(){
   $("familyChoices").innerHTML=families.map(f=>'<button class="family" data-family="'+esc(f)+'">👤<br>'+esc(f)+'</button>').join("");
-  document.querySelectorAll("[data-family]").forEach(b=>b.onclick=()=>enter(b.dataset.family));
+  document.querySelectorAll("[data-family]").forEach(b=>b.onclick=()=>{selectedFamily=b.dataset.family;$("selectedFamily").textContent="נבחרה: "+selectedFamily;document.querySelectorAll("[data-family]").forEach(x=>x.classList.toggle("selected",x===b));$("familyPassword").value="";$("familyPassword").focus();$("loginButton").disabled=false;});
 }
-async function enter(name){
-  family=name;localStorage.setItem("family",name);
+async function enter(name, pass){
+  family=name;password=pass;localStorage.setItem("family",name);localStorage.setItem("familyPassword",pass);
   $("login").classList.add("hidden");$("app").classList.remove("hidden");$("logout").classList.remove("hidden");$("familyName").textContent=name;
-  try{await loadLists();}catch(e){alert(e.message);showLogin();}
+  try{await loadLists();}catch(e){alert(e.message);localStorage.removeItem("family");localStorage.removeItem("familyPassword");family=null;password=null;showLogin();}
 }
 async function loadLists(){const data=await api("/api/lists");listsCache=data.lists||[];renderLists();}
 function renderLists(){
@@ -58,7 +58,9 @@ $("productInput").addEventListener("keydown",e=>{if(e.key==="Enter")addItem(e.ta
 $("quickAdd").innerHTML=quick.map(q=>'<button class="quick" data-quick="'+esc(q.slice(3))+'">'+q+'</button>').join("");
 document.querySelectorAll("[data-quick]").forEach(b=>b.onclick=()=>addItem(b.dataset.quick));
 $("backLists").onclick=()=>{$("listView").classList.add("hidden");$("mine").classList.remove("hidden");renderLists();};
-$("logout").onclick=()=>{localStorage.removeItem("family");family=null;current=null;showLogin();};
+$("logout").onclick=()=>{localStorage.removeItem("family");localStorage.removeItem("familyPassword");family=null;password=null;current=null;selectedFamily=null;showLogin();};
+$("loginButton").onclick=()=>{const pass=$("familyPassword").value;if(!selectedFamily||!pass){alert("בחרו משפחה והזינו סיסמה.");return;}enter(selectedFamily,pass);};
+$("familyPassword").addEventListener("keydown",e=>{if(e.key==="Enter")$("loginButton").click();});
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===b));$("mine").classList.toggle("hidden",b.dataset.tab!=="mine");$("shared").classList.toggle("hidden",b.dataset.tab!=="shared");$("listView").classList.add("hidden");});
 $("shareToggle").onclick=async()=>{
   const l=activeList();if(!l||l.shared)return;
@@ -75,4 +77,4 @@ $("voiceAdd").onclick=()=>{
 };
 // סנכרון אוטומטי בין מכשירים כל 12 שניות.
 setInterval(async()=>{if(!family||document.hidden)return;try{await loadLists();if(current&&!$("listView").classList.contains("hidden"))renderCurrent();}catch(_){}},12000);
-renderFamilies();if(family&&families.includes(family))enter(family);else showLogin();
+renderFamilies();if(family&&password&&families.includes(family))enter(family,password);else showLogin();

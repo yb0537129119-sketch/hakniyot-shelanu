@@ -13,7 +13,10 @@
 <section id="login" class="panel">
   <div class="hero">🧺</div><h1>שלום למשפחה!</h1><p>מי מכין היום את רשימת הקניות?</p>
   <div id="familyChoices" class="family-grid"></div>
-  <p class="small muted">בחירה בשם המשפחה מכניסה לחשבון שלה. אין סיסמה.</p>
+  <p id="selectedFamily" class="muted">בחרו משפחה כדי להמשיך</p>
+  <input id="familyPassword" type="password" autocomplete="current-password" placeholder="סיסמת המשפחה" class="family-password">
+  <button id="loginButton" class="primary login-button" disabled>כניסה לרשימה</button>
+  <p class="small muted">לכל משפחה סיסמה משלה.</p>
 </section>
 <section id="app" class="hidden">
   <div class="welcome"><div><p class="small muted">מחוברים בתור</p><h1 id="familyName"></h1></div><div class="avatar">👋</div></div>
