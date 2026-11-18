@@ -1,80 +1,30 @@
 const families=["משפחת עמר","משפחת בן גיגי","משפחת זכאי","משפחת עוזר","ינון"];
-const quick=["🥛 חלב","🍞 לחם","🥚 ביצים","🧀 גבינה","🍅 עגבניות","🥒 מלפפונים","🍌 בננות","🍎 תפוחים","🧻 נייר טואלט","🧼 נוזל כלים","🍗 עוף","🍚 אורז"];
-let family=localStorage.getItem("family"), password=localStorage.getItem("familyPassword"), selectedFamily=null, current=null, listsCache=[];
+const categories=[
+ ["סופר","🛒"],["סופר מיוחד","🥩"],["פארם","💊"],["טמבוריה","🔨"],
+ ["סטוק / כלי בית","🏠"],["חיות","🐶"],["אחר","📦"],["עליאקספרס","🛍️"]
+];
+let family=localStorage.getItem("blueFamily")||"", selected="", currentCategory="";
 const $=id=>document.getElementById(id);
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-async function api(path,method="GET",body=null){
-  const url=method==="GET"?path+"?family="+encodeURIComponent(family)+"&password="+encodeURIComponent(password||""):path;
-  const res=await fetch(url,{method,headers:{"Content-Type":"application/json"},...(body?{body:JSON.stringify({...body,family,password})}:{})});
-  const data=await res.json().catch(()=>({}));
-  if(!res.ok)throw new Error(data.error||"שגיאה בחיבור");
-  return data;
+const key=()=>`blue-shopping:${family}:${currentCategory}`;
+const read=()=>JSON.parse(localStorage.getItem(key())||"[]");
+const write=x=>localStorage.setItem(key(),JSON.stringify(x));
+function drawCategories(){
+ $("categories").innerHTML=categories.map(([name,icon])=>`<button class="category-card" data-cat="${name}">
+ <span class="chevron">›</span><span class="cat-info"><span class="cat-text"><h2>${name}</h2><p data-count="${name}">0 מוצרים לקנייה</p></span><span class="cat-icon">${icon}</span></span></button>`).join("");
+ document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>openCategory(b.dataset.cat));
 }
-function showLogin(){$("login").classList.remove("hidden");$("app").classList.add("hidden");$("logout").classList.add("hidden");}
-function renderFamilies(){
-  $("familyChoices").innerHTML=families.map(f=>'<button class="family" data-family="'+esc(f)+'">👤<br>'+esc(f)+'</button>').join("");
-  document.querySelectorAll("[data-family]").forEach(b=>b.onclick=()=>{selectedFamily=b.dataset.family;$("selectedFamily").textContent="נבחרה: "+selectedFamily;document.querySelectorAll("[data-family]").forEach(x=>x.classList.toggle("selected",x===b));$("familyPassword").value="";$("familyPassword").focus();$("loginButton").disabled=false;});
+function openCategory(name){currentCategory=name;$("home").classList.add("hidden");$("categoryPage").classList.remove("hidden");$("categoryName").textContent=name;$("categoryIcon").textContent=(categories.find(x=>x[0]===name)||[])[1]||"🛍️";renderProducts();}
+function renderProducts(){const a=read();$("count").textContent=`${a.filter(x=>!x.done).length} מוצרים לקנייה`;$("products").innerHTML=a.map((x,i)=>`<label class="product"><input type="checkbox" data-check="${i}" ${x.done?"checked":""}><span>${escapeHtml(x.name)}</span><button class="remove" data-remove="${i}" type="button">×</button></label>`).join("")||'<div class="product">אין מוצרים ברשימה עדיין</div>';
+ document.querySelectorAll("[data-check]").forEach(c=>c.onchange=()=>{let a=read();a[+c.dataset.check].done=c.checked;write(a);renderProducts();});
+ document.querySelectorAll("[data-remove]").forEach(b=>b.onclick=()=>{let a=read();a.splice(+b.dataset.remove,1);write(a);renderProducts();});
 }
-async function enter(name, pass){
-  family=name;password=pass;localStorage.setItem("family",name);localStorage.setItem("familyPassword",pass);
-  $("login").classList.add("hidden");$("app").classList.remove("hidden");$("logout").classList.remove("hidden");$("familyName").textContent=name;
-  try{await loadLists();}catch(e){alert(e.message);localStorage.removeItem("family");localStorage.removeItem("familyPassword");family=null;password=null;showLogin();}
-}
-async function loadLists(){const data=await api("/api/lists");listsCache=data.lists||[];renderLists();}
-function renderLists(){
-  const mine=listsCache.filter(l=>!l.shared), shared=listsCache.filter(l=>l.shared);
-  $("lists").innerHTML=mine.length?mine.map(listCard).join(""):'<div class="empty">עדיין אין רשימות. יוצרים רשימה ראשונה למעלה 🙂</div>';
-  $("sharedLists").innerHTML=shared.length?shared.map(listCard).join(""):'<div class="empty">עדיין לא שיתפו איתכם רשימות.</div>';
-  document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openList(b.dataset.open));
-}
-function listCard(l){const done=l.items.filter(i=>i.done).length;return '<div class="list-card"><div><b>'+esc(l.name)+'</b><div class="small muted">'+(l.shared?'שותף על ידי '+esc(l.ownerFamily):'הרשימה שלך')+' · '+done+'/'+l.items.length+' מוצרים נקנו</div></div><button data-open="'+esc(l.id)+'">פתיחה ←</button></div>';}
-function activeList(){return listsCache.find(l=>l.id===current);}
-function openList(id){current=id;$("mine").classList.add("hidden");$("shared").classList.add("hidden");$("listView").classList.remove("hidden");renderCurrent();}
-function renderCurrent(){
-  const l=activeList();if(!l)return;
-  $("currentListName").textContent=l.name;
-  const done=l.items.filter(i=>i.done).length;
-  $("progressBar").style.width=(l.items.length?done/l.items.length*100:0)+"%";
-  $("progressText").textContent=done+" מתוך "+l.items.length+" מוצרים נקנו";
-  $("itemsOpen").innerHTML=l.items.filter(i=>!i.done).map(itemHTML).join("")||'<div class="empty">כל הכבוד! אין מוצרים ברשימה 🎉</div>';
-  $("itemsDone").innerHTML=l.items.filter(i=>i.done).map(itemHTML).join("")||'<p class="small muted">עוד לא סומנו מוצרים שנקנו</p>';
-  document.querySelectorAll("[data-item]").forEach(c=>c.onchange=async()=>{try{await api("/api/items","PATCH",{id:c.dataset.item,done:c.checked});await loadLists();renderCurrent();}catch(e){alert(e.message);}});
-  document.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{try{await api("/api/items","DELETE",{id:b.dataset.del});await loadLists();renderCurrent();}catch(e){alert(e.message);}});
-  $("shareToggle").classList.toggle("hidden",l.shared);
-}
-function itemHTML(i){return '<label class="item"><input type="checkbox" data-item="'+esc(i.id)+'" '+(i.done?'checked':'')+'><span class="'+(i.done?'done':'')+'">'+esc(i.name)+'</span><button type="button" class="del" data-del="'+esc(i.id)+'" aria-label="מחיקה">×</button></label>';}
-async function addItem(name){
-  name=name.trim();if(!name)return;
-  try{await api("/api/items","POST",{listId:current,name});$("productInput").value="";await loadLists();renderCurrent();}
-  catch(e){alert(e.message);}
-}
-$("createList").onclick=async()=>{
-  const name=$("newListName").value.trim();if(!name)return;
-  try{const l=await api("/api/lists","POST",{name});$("newListName").value="";await loadLists();openList(l.id);}
-  catch(e){alert(e.message);}
-};
-$("addProduct").onclick=()=>addItem($("productInput").value);
-$("productInput").addEventListener("keydown",e=>{if(e.key==="Enter")addItem(e.target.value);});
-$("quickAdd").innerHTML=quick.map(q=>'<button class="quick" data-quick="'+esc(q.slice(3))+'">'+q+'</button>').join("");
-document.querySelectorAll("[data-quick]").forEach(b=>b.onclick=()=>addItem(b.dataset.quick));
-$("backLists").onclick=()=>{$("listView").classList.add("hidden");$("mine").classList.remove("hidden");renderLists();};
-$("logout").onclick=()=>{localStorage.removeItem("family");localStorage.removeItem("familyPassword");family=null;password=null;current=null;selectedFamily=null;showLogin();};
-$("loginButton").onclick=()=>{const pass=$("familyPassword").value;if(!selectedFamily||!pass){alert("בחרו משפחה והזינו סיסמה.");return;}enter(selectedFamily,pass);};
-$("familyPassword").addEventListener("keydown",e=>{if(e.key==="Enter")$("loginButton").click();});
-document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===b));$("mine").classList.toggle("hidden",b.dataset.tab!=="mine");$("shared").classList.toggle("hidden",b.dataset.tab!=="shared");$("listView").classList.add("hidden");});
-$("shareToggle").onclick=async()=>{
-  const l=activeList();if(!l||l.shared)return;
-  const target=prompt("לאיזו משפחה לשתף?\n"+families.filter(f=>f!==family).join("\n"));
-  if(!target)return;
-  if(!families.includes(target)||target===family){alert("בחרו משפחה מהרשימה.");return;}
-  try{await api("/api/share","POST",{listId:current,targetFamily:target});alert("הרשימה שותפה עם "+target);await loadLists();renderCurrent();}
-  catch(e){alert(e.message);}
-};
-$("voiceAdd").onclick=()=>{
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){alert("הכתבה בדפדפן אינה זמינה. אפשר ללחוץ על המיקרופון במקלדת של האייפון.");return;}
-  const r=new SR();r.lang="he-IL";r.onresult=e=>addItem(e.results[0][0].transcript);r.onerror=()=>alert("לא הצלחנו לזהות את הדיבור. בדקו הרשאת מיקרופון או השתמשו במיקרופון של המקלדת.");r.start();
-};
-// סנכרון אוטומטי בין מכשירים כל 12 שניות.
-setInterval(async()=>{if(!family||document.hidden)return;try{await loadLists();if(current&&!$("listView").classList.contains("hidden"))renderCurrent();}catch(_){}},12000);
-renderFamilies();if(family&&password&&families.includes(family))enter(family,password);else showLogin();
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function showLogin(){ $("login").classList.remove("hidden");$("home").classList.add("hidden");}
+function renderFamilies(){$("familyChoices").innerHTML=families.map(f=>`<button data-family="${f}">${f}</button>`).join("");document.querySelectorAll("[data-family]").forEach(b=>b.onclick=()=>{selected=b.dataset.family;document.querySelectorAll("[data-family]").forEach(x=>x.style.borderColor=x===b?"#2f6eea":"#d6e3f5");});}
+$("loginBtn").onclick=()=>{if(!selected){$("loginError").textContent="בחרו משפחה";return;}const expected={"משפחת עמר":"עמר","משפחת בן גיגי":"בן גיגי","משפחת זכאי":"זכאי","משפחת עוזר":"עוזר","ינון":"ינון"}[selected];if($("password").value!==expected){$("loginError").textContent="סיסמה שגויה";return;}family=selected;localStorage.setItem("blueFamily",family);$("login").classList.add("hidden");$("home").classList.remove("hidden");$("subtitle").textContent=family;drawCategories();};
+$("familyBtn").onclick=()=>{selected="";$("password").value="";$("loginError").textContent="";renderFamilies();showLogin();};
+$("settingsBtn").onclick=()=>alert("הגדרות — בהמשך");
+$("addBtn").onclick=()=>{const n=$("newProduct").value.trim();if(!n)return;let a=read();a.push({name:n,done:false});write(a);$("newProduct").value="";renderProducts();};
+$("newProduct").addEventListener("keydown",e=>{if(e.key==="Enter")$("addBtn").click();});
+$("backBtn").onclick=()=>{$("categoryPage").classList.add("hidden");$("home").classList.remove("hidden");};
+if(family){$("subtitle").textContent=family;drawCategories();}else{renderFamilies();showLogin();}
