@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#176b55"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="/manifest.json"><link rel="stylesheet" href="/style.css">
+<title>הקניות שלנו</title>
+</head>
+<body>
+<header class="top"><div class="brand">🛒 <span>הקניות שלנו</span></div><button id="logout" class="quiet hidden">יציאה</button></header>
+<main>
+<section id="login" class="panel">
+  <div class="hero">🧺</div><h1>שלום למשפחה!</h1><p>מי מכין היום את רשימת הקניות?</p>
+  <div id="familyChoices" class="family-grid"></div>
+  <p class="small muted">בחירה בשם המשפחה מכניסה לחשבון שלה. אין סיסמה.</p>
+</section>
+<section id="app" class="hidden">
+  <div class="welcome"><div><p class="small muted">מחוברים בתור</p><h1 id="familyName"></h1></div><div class="avatar">👋</div></div>
+  <div class="tabs"><button class="tab active" data-tab="mine">הרשימות שלי</button><button class="tab" data-tab="shared">רשימות משותפות</button></div>
+  <section id="mine" class="tabpage">
+    <div class="new-list"><input id="newListName" placeholder="שם הרשימה, למשל: קניות לשבת"><button id="createList" class="primary">＋ יצירת רשימה</button></div>
+    <div id="lists" class="list-stack"></div>
+  </section>
+  <section id="shared" class="tabpage hidden"><div id="sharedLists" class="list-stack"></div></section>
+  <section id="listView" class="hidden">
+    <button id="backLists" class="back">← חזרה לרשימות</button>
+    <div class="list-heading"><div><p class="small muted">רשימת קניות</p><h2 id="currentListName"></h2></div><button id="shareToggle" class="share">↗ שיתוף</button></div>
+    <div class="progress"><div id="progressBar"></div></div><p id="progressText" class="small muted"></p>
+    <div class="add-row"><input id="productInput" placeholder="מה צריך לקנות?"><button id="addProduct" class="primary">הוספה</button></div>
+    <button id="voiceAdd" class="voice">🎤 הוספה בדיבור</button>
+    <div id="quickAdd" class="quick-grid"></div>
+    <h3>מה עוד צריך לקנות?</h3><div id="itemsOpen" class="items"></div>
+    <h3>כבר קנינו</h3><div id="itemsDone" class="items"></div>
+  </section>
+</section>
+</main>
+<footer>פשוט לקנות. ביחד. ❤️</footer>
+<script src="/app.js"></script>
+</body></html>
