@@ -1,30 +1,17 @@
 const families=["משפחת עמר","משפחת בן גיגי","משפחת זכאי","משפחת עוזר","ינון"];
-const categories=[
- ["סופר","🛒"],["סופר מיוחד","🥩"],["פארם","💊"],["טמבוריה","🔨"],
- ["סטוק / כלי בית","🏠"],["חיות","🐶"],["אחר","📦"],["עליאקספרס","🛍️"]
-];
-let family=localStorage.getItem("blueFamily")||"", selected="", currentCategory="";
+const categories=[["סופר","🛒"],["סופר מיוחד","🥩"],["פארם","💊"],["טמבוריה","🔨"],["סטוק / כלי בית","🏠"],["חיות","🐶"],["אחר","📦"],["עליאקספרס","🛍️"]];
+let family=sessionStorage.getItem("shoppingFamily")||"", password=sessionStorage.getItem("shoppingPassword")||"", selected="", currentCategory="", lists=[], busy=false;
 const $=id=>document.getElementById(id);
-const key=()=>`blue-shopping:${family}:${currentCategory}`;
-const read=()=>JSON.parse(localStorage.getItem(key())||"[]");
-const write=x=>localStorage.setItem(key(),JSON.stringify(x));
-function drawCategories(){
- $("categories").innerHTML=categories.map(([name,icon])=>`<button class="category-card" data-cat="${name}">
- <span class="chevron">›</span><span class="cat-info"><span class="cat-text"><h2>${name}</h2><p data-count="${name}">0 מוצרים לקנייה</p></span><span class="cat-icon">${icon}</span></span></button>`).join("");
- document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>openCategory(b.dataset.cat));
-}
-function openCategory(name){currentCategory=name;$("home").classList.add("hidden");$("categoryPage").classList.remove("hidden");$("categoryName").textContent=name;$("categoryIcon").textContent=(categories.find(x=>x[0]===name)||[])[1]||"🛍️";renderProducts();}
-function renderProducts(){const a=read();$("count").textContent=`${a.filter(x=>!x.done).length} מוצרים לקנייה`;$("products").innerHTML=a.map((x,i)=>`<label class="product"><input type="checkbox" data-check="${i}" ${x.done?"checked":""}><span>${escapeHtml(x.name)}</span><button class="remove" data-remove="${i}" type="button">×</button></label>`).join("")||'<div class="product">אין מוצרים ברשימה עדיין</div>';
- document.querySelectorAll("[data-check]").forEach(c=>c.onchange=()=>{let a=read();a[+c.dataset.check].done=c.checked;write(a);renderProducts();});
- document.querySelectorAll("[data-remove]").forEach(b=>b.onclick=()=>{let a=read();a.splice(+b.dataset.remove,1);write(a);renderProducts();});
-}
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-function showLogin(){ $("login").classList.remove("hidden");$("home").classList.add("hidden");}
-function renderFamilies(){$("familyChoices").innerHTML=families.map(f=>`<button data-family="${f}">${f}</button>`).join("");document.querySelectorAll("[data-family]").forEach(b=>b.onclick=()=>{selected=b.dataset.family;document.querySelectorAll("[data-family]").forEach(x=>x.style.borderColor=x===b?"#2f6eea":"#d6e3f5");});}
-$("loginBtn").onclick=()=>{if(!selected){$("loginError").textContent="בחרו משפחה";return;}const expected={"משפחת עמר":"עמר","משפחת בן גיגי":"בן גיגי","משפחת זכאי":"זכאי","משפחת עוזר":"עוזר","ינון":"ינון"}[selected];if($("password").value!==expected){$("loginError").textContent="סיסמה שגויה";return;}family=selected;localStorage.setItem("blueFamily",family);$("login").classList.add("hidden");$("home").classList.remove("hidden");$("subtitle").textContent=family;drawCategories();};
-$("familyBtn").onclick=()=>{selected="";$("password").value="";$("loginError").textContent="";renderFamilies();showLogin();};
-$("settingsBtn").onclick=()=>alert("הגדרות — בהמשך");
-$("addBtn").onclick=()=>{const n=$("newProduct").value.trim();if(!n)return;let a=read();a.push({name:n,done:false});write(a);$("newProduct").value="";renderProducts();};
-$("newProduct").addEventListener("keydown",e=>{if(e.key==="Enter")$("addBtn").click();});
-$("backBtn").onclick=()=>{$("categoryPage").classList.add("hidden");$("home").classList.remove("hidden");};
-if(family){$("subtitle").textContent=family;drawCategories();}else{renderFamilies();showLogin();}
+async function api(path,method="GET",body=null){const url=new URL(path,location.origin);if(method==="GET"){url.searchParams.set("family",family);url.searchParams.set("password",password)}const opts={method,headers:{"Content-Type":"application/json"},cache:"no-store"};if(body)opts.body=JSON.stringify({...body,family,password});const r=await fetch(url,opts);let data={};try{data=await r.json()}catch{}if(!r.ok)throw new Error(data.error||`שגיאה ${r.status}`);return data;}
+function showLogin(){$("login").classList.remove("hidden");$("home").classList.add("hidden");$("categoryPage").classList.add("hidden");}
+function renderFamilies(){$("familyChoices").innerHTML=families.map(f=>`<button data-family="${f}">${f}</button>`).join("");document.querySelectorAll("[data-family]").forEach(b=>b.onclick=()=>{selected=b.dataset.family;document.querySelectorAll("[data-family]").forEach(x=>x.style.borderColor=x===b?"#2f6eea":"#d6e3f5")});}
+async function login(){if(!selected){$("loginError").textContent="בחרו משפחה";return}const p=$("password").value;family=selected;password=p;try{await api("/api/lists");sessionStorage.setItem("shoppingFamily",family);sessionStorage.setItem("shoppingPassword",password);$("loginError").textContent="";$("login").classList.add("hidden");$("home").classList.remove("hidden");$("subtitle").textContent=family;await loadLists();drawCategories()}catch(e){$("loginError").textContent=e.message}}
+async function loadLists(){const d=await api("/api/lists");lists=d.lists||[];for(const [name] of categories){if(!lists.some(x=>x.name===name)){const l=await api("/api/lists","POST",{name});lists.push(l)}}}
+function drawCategories(){$("categories").innerHTML=categories.map(([name,icon])=>{const l=lists.find(x=>x.name===name);const count=l?(l.items||[]).filter(x=>!x.done).length:0;return `<button class="category-card" data-cat="${name}"><span class="chevron">›</span><span class="cat-info"><span class="cat-text"><h2>${name}</h2><p>${count} מוצרים לקנייה</p></span><span class="cat-icon">${icon}</span></span></button>`}).join("");document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>openCategory(b.dataset.cat));}
+function currentList(){return lists.find(x=>x.name===currentCategory)}
+function openCategory(name){currentCategory=name;$("home").classList.add("hidden");$("categoryPage").classList.remove("hidden");$("categoryName").textContent=name;$("categoryIcon").textContent=(categories.find(x=>x[0]===name)||[])[1];renderProducts()}
+function renderProducts(){const l=currentList(),items=l?.items||[];$("count").textContent=`${items.filter(x=>!x.done).length} מוצרים לקנייה`;$ ("products").innerHTML=items.map(x=>`<label class="product"><input type="checkbox" data-check="${x.id}" ${x.done?"checked":""}><span>${escapeHtml(x.name)}</span><button class="remove" data-remove="${x.id}" type="button">×</button></label>`).join("")||'<div class="product">אין מוצרים ברשימה עדיין</div>';document.querySelectorAll("[data-check]").forEach(c=>c.onchange=async()=>{try{await api("/api/items","PATCH",{id:c.dataset.check,done:c.checked});await refresh()}catch(e){alert(e.message)}});document.querySelectorAll("[data-remove]").forEach(b=>b.onclick=async()=>{try{await api("/api/items","DELETE",{id:b.dataset.remove});await refresh()}catch(e){alert(e.message)}})}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+async function refresh(){await loadLists();drawCategories();if(currentCategory)renderProducts()}
+$("loginBtn").onclick=login;$("familyBtn").onclick=()=>{sessionStorage.removeItem("shoppingFamily");sessionStorage.removeItem("shoppingPassword");family="";password="";selected="";$("password").value="";renderFamilies();showLogin()};$("settingsBtn").onclick=()=>alert("הגדרות — בהמשך");$("addBtn").onclick=async()=>{const name=$("newProduct").value.trim(),l=currentList();if(!name||!l)return;try{await api("/api/items","POST",{listId:l.id,name});$("newProduct").value="";await refresh()}catch(e){alert(e.message)}};$("newProduct").addEventListener("keydown",e=>{if(e.key==="Enter")$("addBtn").click()});$("backBtn").onclick=()=>{$("categoryPage").classList.add("hidden");$("home").classList.remove("hidden");currentCategory=""};
+renderFamilies();if(family&&password){api("/api/lists").then(async()=>{$("login").classList.add("hidden");$("home").classList.remove("hidden");$("subtitle").textContent=family;await loadLists();drawCategories()}).catch(()=>{family="";password="";sessionStorage.clear();showLogin()})}else showLogin();setInterval(()=>{if(family&&password&&!document.hidden)refresh().catch(()=>{})},12000);
