@@ -3,12 +3,16 @@ const categories=[["סופר","🛒"],["סופר מיוחד","🥩"],["פארם"
 let family=sessionStorage.getItem("shoppingFamily")||"", password=sessionStorage.getItem("shoppingPassword")||"", selected="", currentCategory="", lists=[], busy=false;
 const $=id=>document.getElementById(id);
 async function api(path,method="GET",body=null){
-  const headers={"Accept":"application/json","Content-Type":"application/json"};
-  if(method==="GET"){headers["X-Family"]=family;headers["X-Password"]=password}
-  const opts={method,headers,cache:"no-store"};
-  if(body)opts.body=JSON.stringify({...body,family,password});
+  const opts={method,cache:"no-store",credentials:"same-origin"};
+  if(method!=="GET"){
+    opts.headers={"Accept":"application/json","Content-Type":"application/json"};
+    opts.body=JSON.stringify({...body,family,password});
+  }
   let response;
-  try{response=await fetch(path,opts)}catch(e){throw new Error("אין חיבור לשרת. בדקו אינטרנט ונסו שוב.")}
+  try{response=await fetch(path,opts)}catch(e){
+    console.error("API connection failed",path,e);
+    throw new Error("החיבור לשרת נכשל. בדקו רשת ונסו שוב.");
+  }
   const raw=await response.text();
   let data={};
   if(raw){try{data=JSON.parse(raw)}catch{throw new Error("השרת החזיר תשובה לא תקינה ("+response.status+").")}}
@@ -18,8 +22,8 @@ async function api(path,method="GET",body=null){
 }
 function showLogin(){$("login").classList.remove("hidden");$("home").classList.add("hidden");$("categoryPage").classList.add("hidden");}
 function renderFamilies(){$("familyChoices").innerHTML=families.map(f=>`<button data-family="${f}">${f}</button>`).join("");document.querySelectorAll("[data-family]").forEach(b=>b.onclick=()=>{selected=b.dataset.family;document.querySelectorAll("[data-family]").forEach(x=>x.style.borderColor=x===b?"#2f6eea":"#d6e3f5")});}
-async function login(){if(!selected){$("loginError").textContent="בחרו משפחה";return}const p=$("password").value;family=selected;password=p;try{await api("/api/lists");sessionStorage.setItem("shoppingFamily",family);sessionStorage.setItem("shoppingPassword",password);$("loginError").textContent="";$("login").classList.add("hidden");$("home").classList.remove("hidden");$("subtitle").textContent=family;await loadLists();drawCategories()}catch(e){$("loginError").textContent=e.message}}
-async function loadLists(){const d=await api("/api/lists");lists=d.lists||[];for(const [name] of categories){if(!lists.some(x=>x.name===name)){const l=await api("/api/lists","POST",{name});lists.push(l)}}}
+async function login(){if(!selected){$("loginError").textContent="בחרו משפחה";return}const p=$("password").value;family=selected;password=p;try{await loadLists();sessionStorage.setItem("shoppingFamily",family);sessionStorage.setItem("shoppingPassword",password);$("loginError").textContent="";$("login").classList.add("hidden");$("home").classList.remove("hidden");$("subtitle").textContent=family;drawCategories()}catch(e){$("loginError").textContent=e.message}}
+async function loadLists(){const d=await api("/api/lists","POST",{action:"load"});lists=d.lists||[];for(const [name] of categories){if(!lists.some(x=>x.name===name)){const l=await api("/api/lists","POST",{name});lists.push(l)}}}
 function drawCategories(){$("categories").innerHTML=categories.map(([name,icon])=>{const l=lists.find(x=>x.name===name);const count=l?(l.items||[]).filter(x=>!x.done).length:0;return `<button class="category-card" data-cat="${name}"><span class="chevron">›</span><span class="cat-info"><span class="cat-text"><h2>${name}</h2><p>${count} מוצרים לקנייה</p></span><span class="cat-icon">${icon}</span></span></button>`}).join("");document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>openCategory(b.dataset.cat));}
 function currentList(){return lists.find(x=>x.name===currentCategory)}
 function openCategory(name){currentCategory=name;$("home").classList.add("hidden");$("categoryPage").classList.remove("hidden");$("categoryName").textContent=name;$("categoryIcon").textContent=(categories.find(x=>x[0]===name)||[])[1];renderProducts()}
@@ -36,4 +40,4 @@ $("darkThemeBtn").onclick=()=>applyTheme("dark");
 applyTheme(localStorage.getItem("shoppingTheme")||"light");function startVoiceInput(){const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;if(!Speech){alert("הדיבור הישיר לא נתמך בדפדפן הזה. אפשר ללחוץ על המיקרופון במקלדת של האייפון ולהכתיב בשדה המוצר.");$("newProduct").focus();return}const recognition=new Speech();recognition.lang="he-IL";recognition.interimResults=false;recognition.maxAlternatives=1;const button=$("voiceBtn");button.disabled=true;button.textContent="🎙️ מקשיב…";recognition.onresult=e=>{const spoken=e.results?.[0]?.[0]?.transcript?.trim();if(spoken){const input=$("newProduct");input.value=(input.value?input.value+" ":"")+spoken;input.focus()}};recognition.onerror=e=>{if(e.error!=="no-speech"&&e.error!=="aborted")alert("לא הצלחנו לזהות דיבור. אפשר להשתמש במיקרופון של המקלדת.")};recognition.onend=()=>{button.disabled=false;button.textContent="🎤"};try{recognition.start()}catch{button.disabled=false;button.textContent="🎤"}}
 $("voiceBtn").onclick=startVoiceInput;
 $("addBtn").onclick=async()=>{const name=$("newProduct").value.trim(),l=currentList();if(!name||!l)return;try{await api("/api/items","POST",{listId:l.id,name});$("newProduct").value="";await refresh()}catch(e){alert(e.message)}};$("newProduct").addEventListener("keydown",e=>{if(e.key==="Enter")$("addBtn").click()});$("backBtn").onclick=()=>{$("categoryPage").classList.add("hidden");$("home").classList.remove("hidden");currentCategory=""};
-renderFamilies();if(family&&password){api("/api/lists").then(async()=>{$("login").classList.add("hidden");$("home").classList.remove("hidden");$("subtitle").textContent=family;await loadLists();drawCategories()}).catch(()=>{family="";password="";sessionStorage.clear();showLogin()})}else showLogin();setInterval(()=>{if(family&&password&&!document.hidden)refresh().catch(()=>{})},12000);
+renderFamilies();if(family&&password){loadLists().then(()=>{$("login").classList.add("hidden");$("home").classList.remove("hidden");$("subtitle").textContent=family;drawCategories()}).catch(()=>{family="";password="";sessionStorage.clear();showLogin()})}else showLogin();setInterval(()=>{if(family&&password&&!document.hidden)refresh().catch(()=>{})},12000);
