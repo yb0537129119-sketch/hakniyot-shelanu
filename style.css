@@ -52,3 +52,35 @@ input{font:inherit;border:2px solid var(--line);border-radius:16px;padding:17px;
 :root[data-theme="dark"] .settings-card{background:var(--white);color:var(--ink)}
 :root[data-theme="dark"] .theme-choice{background:#24334a;color:var(--ink)}
 :root[data-theme="dark"] .theme-choice.active{background:var(--blue);color:#fff}
+
+/* Senior-friendly accessibility improvements */
+.icon-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:88px}
+.icon-btn span{font-size:30px;line-height:1}
+.icon-btn small{font-size:15px;font-weight:750;color:var(--ink)}
+button,input{touch-action:manipulation}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible{outline:4px solid #f0a000;outline-offset:3px}
+button:active{transform:scale(.985)}
+.large-text-toggle{width:100%;margin-top:18px;min-height:72px;padding:16px;border:3px solid var(--blue);border-radius:18px;background:var(--bg);color:var(--ink);font-size:21px;font-weight:850}
+.large-text-toggle[aria-pressed="true"]{background:var(--blue);color:#fff}
+.large-text .heading h1{font-size:54px}
+.large-text .heading p{font-size:28px}
+.large-text .cat-text h2{font-size:44px}
+.large-text .cat-text p{font-size:30px}
+.large-text .category-card{min-height:190px}
+.large-text .family-grid button{font-size:25px;min-height:76px}
+.large-text .login h2{font-size:38px}
+.large-text .login p,.large-text .settings-card p{font-size:22px}
+.large-text input{font-size:25px;min-height:72px;padding:20px}
+.large-text .primary{font-size:24px;min-height:72px;padding:20px 26px}
+.large-text .product{font-size:26px;min-height:76px;padding:20px}
+.large-text .product input{width:32px;height:32px}
+.large-text .remove{font-size:34px;min-width:44px;min-height:44px}
+.large-text .back{font-size:27px;min-height:60px}
+.large-text .theme-choice{font-size:22px;min-height:84px}
+@media(max-width:520px){
+ .icon-btn{min-width:78px;width:78px;height:78px;border-radius:22px}
+ .icon-btn small{font-size:13px}
+ .large-text .cat-text h2{font-size:38px}
+ .large-text .cat-text p{font-size:26px}
+}
