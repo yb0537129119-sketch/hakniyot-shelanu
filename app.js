@@ -75,8 +75,8 @@ applySizeLevel(sizeLevel);
 function splitSpokenProducts(text){
  const clean=String(text||"").replace(/[.!?؟؛]/g,",").trim();
  if(!clean)return [];
- const chunks=clean.split(/[,،\\n]+/).map(x=>x.trim()).filter(Boolean);
- return chunks.flatMap(chunk=>chunk.split(/\\s+/).map(x=>x.trim()).filter(Boolean));
+ const chunks=clean.split(/[,،\n]+/).map(x=>x.trim()).filter(Boolean);
+ return chunks.flatMap(chunk=>chunk.split(/\s+/).map(x=>x.trim()).filter(Boolean));
 }
 async function addSpokenProducts(spoken){
  const names=splitSpokenProducts(spoken),l=currentList();
