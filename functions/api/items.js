@@ -8,9 +8,16 @@ export async function onRequestPost({ request, env }) {
     if (typeof name !== "string" || !name.trim() || name.length > 100) return error("שם מוצר לא תקין");
     const db = await getDB(env);
     if (!await canAccess(db, listId, family)) return error("אין גישה לרשימה", 403);
+    const cleanName = name.trim();
+    await db.prepare(`
+      INSERT INTO shopping_item_history (id, family_name, list_id, item_name, add_count)
+      VALUES (?, ?, ?, ?, 1)
+      ON CONFLICT(family_name, list_id, item_name)
+      DO UPDATE SET add_count = add_count + 1, last_added_at = CURRENT_TIMESTAMP
+    `).bind(crypto.randomUUID(), family, listId, cleanName).run();
     const id = crypto.randomUUID();
     await db.prepare("INSERT INTO shopping_items (id, list_id, name) VALUES (?, ?, ?)")
-      .bind(id, listId, name.trim()).run();
+      .bind(id, listId, cleanName).run();
     return json({ id, listId, name: name.trim(), done: false }, 201);
   } catch {
     return error("לא הצלחנו להוסיף את המוצר.", 503);
