@@ -220,4 +220,4 @@ body.shopping-mode .product{min-height:66px;font-size:23px}
 body.shopping-mode .product.is-done{opacity:.42}
 body.shopping-mode .product.is-done span{text-decoration:line-through}
 body.shopping-mode .quantity-actions{display:none}
-@media print{.quantity-actions,.item-quantity{display:none!important}.product b{display:inline!important}}
+@media print{.quantity-actions{display:none!important}.item-quantity{display:inline!important}.product b{display:inline!important}}
