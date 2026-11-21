@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f2f6ff">
 <link rel="manifest" href="/manifest.json">
-<link rel="stylesheet" href="/style.css?v=20261121-2139">
+<link rel="stylesheet" href="/style.css?v=20261121-elderly1">
 <title>הקניות שלנו</title>
 </head>
 <body>
 <header class="header">
   <div class="actions">
-    <button class="icon-btn" id="settingsBtn" aria-label="הגדרות">⚙️</button>
-    <button class="icon-btn" id="familyBtn" aria-label="משפחה">👥</button>
+    <button class="icon-btn" id="settingsBtn" aria-label="הגדרות"><span>⚙️</span><small>הגדרות</small></button>
+    <button class="icon-btn" id="familyBtn" aria-label="החלפת משפחה"><span>👥</span><small>החלפת משפחה</small></button>
   </div>
   <div class="heading"><h1>הקניות שלנו</h1><p id="subtitle">הבית שלנו</p></div>
 </header>
@@ -20,11 +20,12 @@
 <section id="settingsPanel" class="settings-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
   <div class="settings-card">
     <div class="settings-head"><h2 id="settingsTitle">הגדרות</h2><button id="closeSettings" class="settings-close" aria-label="סגירה">×</button></div>
-    <p>בחר איך ייראה המסך</p>
+    <p>התאימו את האתר שיהיה נוח לקריאה ולשימוש</p>
     <div class="theme-options">
       <button id="lightThemeBtn" class="theme-choice" type="button">☀️ מצב בהיר</button>
       <button id="darkThemeBtn" class="theme-choice" type="button">🌙 מצב כהה</button>
     </div>
+    <button id="largeTextBtn" class="large-text-toggle" type="button" aria-pressed="false">🔎 הגדלת כתב וכפתורים</button>
   </div>
 </section>
 <main>
@@ -52,6 +53,6 @@
     <div id="products" class="products"></div>
   </section>
 </main>
-<script src="/app.js?v=20261121-2139"></script>
+<script src="/app.js?v=20261121-elderly1"></script>
 </body>
 </html>
