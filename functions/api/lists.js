@@ -1,3 +1,4 @@
+// Cloudflare Pages redeploy trigger: this file has valid try/catch structure.
 
 import { getDB, validCredentials, json, error } from "./_db.js";
 
