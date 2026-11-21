@@ -37,8 +37,12 @@ export async function validCredentials(name, password) {
   return hash === PASSWORD_HASHES[name];
 }
 
-export const json = (data, status = 200) => Response.json(data, {
-  status, headers: { "Cache-Control": "no-store" }
+export const json = (data, status = 200) => new Response(JSON.stringify(data), {
+  status,
+  headers: {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store"
+  }
 });
 
 export const error = (message, status = 400) => json({ error: message }, status);
