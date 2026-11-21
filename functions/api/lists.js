@@ -23,8 +23,11 @@ export async function onRequestGet({ request, env }) {
       lists.push({ ...row, shared: !!row.shared, items: items.map(i => ({...i, done: !!i.done})) });
     }
     return json({ lists });
-  } catch {
-    return error("לא הצלחנו לטעון. בדקו שחיבור D1 בשם DB מוגדר ב-Cloudflare.", 503);
+} 
+    } catch (e) {
+  console.error("GET /api/lists failed:", e);
+  return error("תקלה בטעינת הרשימות: " + (e?.message || String(e)), 503);
+}
   }
 }
 
