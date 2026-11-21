@@ -48,7 +48,7 @@ async function loadLists(){const d=await api("/api/lists","POST",{action:"load"}
 function drawCategories(){$("categories").innerHTML=categories.map(([name,icon])=>{const l=lists.find(x=>x.name===name);const count=l?(l.items||[]).filter(x=>!x.done).length:0;return `<button class="category-card" data-cat="${name}"><span class="chevron">›</span><span class="cat-info"><span class="cat-text"><h2>${name}</h2><p>${count} מוצרים לקנייה</p></span><span class="cat-icon">${icon}</span></span></button>`}).join("");document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>openCategory(b.dataset.cat));}
 function currentList(){return lists.find(x=>x.name===currentCategory)}
 function openCategory(name){currentCategory=name;$("home").classList.add("hidden");$("categoryPage").classList.remove("hidden");$("categoryName").textContent=name;$("categoryIcon").textContent=(categories.find(x=>x[0]===name)||[])[1];renderProducts()}
-function renderProducts(){const l=currentList(),items=l?.items||[];$("count").textContent=`${items.filter(x=>!x.done).length} מוצרים לקנייה`;$ ("products").innerHTML=items.map(x=>`<label class="product"><input type="checkbox" data-check="${x.id}" ${x.done?"checked":""}><span>${escapeHtml(x.name)}</span><button class="remove" data-remove="${x.id}" type="button">×</button></label>`).join("")||'<div class="product">אין מוצרים ברשימה עדיין</div>';document.querySelectorAll("[data-check]").forEach(c=>c.onchange=async()=>{try{await api("/api/items","PATCH",{id:c.dataset.check,done:c.checked});await refresh()}catch(e){alert(e.message)}});document.querySelectorAll("[data-remove]").forEach(b=>b.onclick=async()=>{try{await api("/api/items","DELETE",{id:b.dataset.remove});await refresh()}catch(e){alert(e.message)}})}
+function renderProducts(){const l=currentList(),items=l?.items||[];$("count").textContent=`${items.filter(x=>!x.done).length} מוצרים לקנייה`;$ ("products").innerHTML=items.map(x=>`<label class="product ${x.done?"is-done":""}"><input type="checkbox" data-check="${x.id}" ${x.done?"checked":""}><span>${escapeHtml(x.name)} <b class="item-quantity">×${Number(x.quantity||1)}</b></span><span class="quantity-actions"><button type="button" data-qty="-1" data-id="${x.id}">−</button><button type="button" data-qty="1" data-id="${x.id}">+</button></span><button class="remove" data-remove="${x.id}" type="button">×</button></label>`).join("")||'<div class="product">אין מוצרים ברשימה עדיין</div>';document.querySelectorAll("[data-check]").forEach(c=>c.onchange=async()=>{try{await api("/api/items","PATCH",{id:c.dataset.check,done:c.checked});await refresh()}catch(e){alert(e.message)}});document.querySelectorAll("[data-qty]").forEach(b=>b.onclick=async()=>{const item=items.find(x=>x.id===b.dataset.id);const quantity=Math.max(1,Math.min(99,Number(item?.quantity||1)+Number(b.dataset.qty)));try{await api("/api/items","PATCH",{id:b.dataset.id,quantity});await refresh()}catch(e){alert(e.message)}});document.querySelectorAll("[data-remove]").forEach(b=>b.onclick=async()=>{try{await api("/api/items","DELETE",{id:b.dataset.remove});await refresh()}catch(e){alert(e.message)}})}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 async function refresh(){await loadLists();drawCategories();if(currentCategory)renderProducts()}
 $("loginBtn").onclick=login;$("familyBtn").onclick=()=>{clearSavedLogin();family="";password="";selected="";$("password").value="";renderFamilies();showLogin()};function applyTheme(theme){document.documentElement.dataset.theme=theme;localStorage.setItem("shoppingTheme",theme);$("lightThemeBtn")?.classList.toggle("active",theme==="light");$("darkThemeBtn")?.classList.toggle("active",theme==="dark");}
@@ -138,6 +138,26 @@ async function showHistory(){
  }catch(e){box.innerHTML='<div class="product">'+escapeHtml(e.message)+'</div>'}
 }
 $("historyBtn").onclick=showHistory;
+
+$("shoppingModeBtn").onclick=()=>{
+ document.body.classList.toggle("shopping-mode");
+ $("shoppingModeBtn").textContent=document.body.classList.contains("shopping-mode")?"✓ יציאה ממצב קניות":"🛒 מצב קניות";
+ renderProducts();
+};
+$("favoritesBtn").onclick=async()=>{
+ const l=currentList();if(!l)return;
+ try{
+  const data=await api("/api/history","POST",{listId:l.id});
+  const frequent=(data.items||[]).filter(x=>Number(x.addCount)>=2);
+  if(!frequent.length){alert("עדיין אין מוצרים קבועים. הוסיפו מוצרים כמה פעמים והם יופיעו כאן.");return}
+  const chosen=prompt("המוצרים הקבועים שלך:\n"+frequent.map((x,i)=>(i+1)+". "+x.itemName+" (נוסף "+x.addCount+" פעמים)").join("\n")+"\n\nהקלידו מספרים להוספה, מופרדים בפסיקים. השאירו ריק לביטול.");
+  if(!chosen)return;
+  const indices=chosen.split(/[,，\s]+/).map(x=>Number(x)-1).filter(i=>Number.isInteger(i)&&i>=0&&i<frequent.length);
+  for(const i of [...new Set(indices)])await api("/api/items","POST",{listId:l.id,name:frequent[i].itemName});
+  await refresh();
+ }catch(e){alert(e.message)}
+};
+
 $("pdfBtn").onclick=()=>{
  const now=new Date();
  const date=now.toLocaleDateString("he-IL",{year:"numeric",month:"long",day:"numeric"});
@@ -156,7 +176,7 @@ $("pdfAllBtn").onclick=()=>{
   const items=(list?.items||[]).filter(x=>!x.done);
   if(!items.length)continue;
   total+=items.length;
-  sections.push('<section class="print-category"><h2>'+icon+' '+escapeHtml(name)+' <small>('+items.length+')</small></h2><ul>'+items.map(x=>'<li><span class="print-check"></span>'+escapeHtml(x.name)+'</li>').join("")+'</ul></section>');
+  sections.push('<section class="print-category"><h2>'+icon+' '+escapeHtml(name)+' <small>('+items.length+')</small></h2><ul>'+items.map(x=>'<li><span class="print-check"></span>'+escapeHtml(x.name)+' <b>×'+Number(x.quantity||1)+'</b></li>').join("")+'</ul></section>');
  }
  $("printAllArea").innerHTML='<header class="print-all-header"><h1>רשימת הקניות של '+escapeHtml(family)+'</h1><p>'+date+' · '+total+' מוצרים לקנייה</p></header>'+(sections.join("")||'<p>אין כרגע מוצרים ברשימת הקניות.</p>');
  document.body.classList.add("print-all");
@@ -164,5 +184,5 @@ $("pdfAllBtn").onclick=()=>{
 };
 window.addEventListener("afterprint",()=>document.body.classList.remove("print-all"));
 $("voiceBtn").onclick=startVoiceInput;
-$("addBtn").onclick=async()=>{const name=$("newProduct").value.trim(),l=currentList();if(!name||!l)return;try{await api("/api/items","POST",{listId:l.id,name});$("newProduct").value="";await refresh()}catch(e){alert(e.message)}};$("newProduct").addEventListener("keydown",e=>{if(e.key==="Enter")$("addBtn").click()});$("backBtn").onclick=()=>{$("categoryPage").classList.add("hidden");$("home").classList.remove("hidden");currentCategory=""};
+$("addBtn").onclick=async()=>{const name=$("newProduct").value.trim(),l=currentList(),quantity=Math.max(1,Math.min(99,Number.parseInt($("newQuantity").value,10)||1));if(!name||!l)return;try{await api("/api/items","POST",{listId:l.id,name,quantity});$("newProduct").value="";$("newQuantity").value="1";await refresh()}catch(e){alert(e.message)}};$("newProduct").addEventListener("keydown",e=>{if(e.key==="Enter")$("addBtn").click()});$("backBtn").onclick=()=>{$("categoryPage").classList.add("hidden");$("home").classList.remove("hidden");currentCategory=""};
 renderFamilies();if(family&&password){saveLoginForSevenDays();loadLists().then(()=>{$("login").classList.add("hidden");$("home").classList.remove("hidden");$("subtitle").textContent=family;drawCategories()}).catch(()=>{family="";password="";sessionStorage.clear();showLogin()})}else showLogin();setInterval(()=>{if(family&&password&&!document.hidden)refresh().catch(()=>{})},12000);
