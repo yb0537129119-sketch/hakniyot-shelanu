@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f2f6ff">
 <link rel="manifest" href="/manifest.json">
-<link rel="stylesheet" href="/style.css?v=20261121-allfeatures1">
+<link rel="stylesheet" href="/style.css?v=20261122-homepdf1">
 <title>הקניות שלנו</title>
 </head>
 <body>
@@ -39,6 +39,7 @@
   </section>
 
   <section id="home">
+    <div class="home-top-actions"><button id="pdfAllBtn" type="button" class="home-pdf-tab">🧾 PDF לכל הקניות</button></div>
     <div id="categories" class="categories"></div>
   </section>
 
@@ -52,11 +53,11 @@
       <input id="newQuantity" class="quantity-input" type="number" min="1" max="99" value="1" aria-label="כמות">
       <button id="addBtn" class="primary">הוספה</button>
     </div>
-    <div class="list-tools"><button id="shoppingModeBtn" type="button" class="secondary-action">🛒 מצב קניות</button><button id="favoritesBtn" type="button" class="secondary-action">⭐ מוצרים קבועים</button><button id="historyBtn" type="button" class="secondary-action">🕘 היסטוריית מוצרים</button><button id="pdfBtn" type="button" class="secondary-action">📄 PDF לקטגוריה</button><button id="pdfAllBtn" type="button" class="secondary-action">🧾 PDF לכל הקניות</button></div>
+    <div class="list-tools"><button id="shoppingModeBtn" type="button" class="secondary-action">🛒 מצב קניות</button><button id="favoritesBtn" type="button" class="secondary-action">⭐ מוצרים קבועים</button><button id="historyBtn" type="button" class="secondary-action">🕘 היסטוריית מוצרים</button><button id="pdfBtn" type="button" class="secondary-action">📄 PDF לקטגוריה</button></div>
     <section id="historyPanel" class="history-panel hidden"><h3>מוצרים שהוספת בעבר</h3><p>אפשר להוסיף אותם שוב לרשימה בלחיצה.</p><div id="historyProducts" class="history-products"></div></section>
     <div id="products" class="products"></div>
   </section>
 </main>
-<script src="/app.js?v=20261121-allfeatures1"></script>
+<script src="/app.js?v=20261122-homepdf1"></script>
 </body>
 </html>
