@@ -51,7 +51,36 @@ $("sizeDownBtn").onclick=()=>applySizeLevel(sizeLevel-1);
 $("sizeUpBtn").onclick=()=>applySizeLevel(sizeLevel+1);
 $("largeTextBtn").onclick=()=>applySizeLevel(1);
 applySizeLevel(sizeLevel);
-function startVoiceInput(){const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;if(!Speech){alert("הדיבור הישיר לא נתמך בדפדפן הזה. אפשר ללחוץ על המיקרופון במקלדת של האייפון ולהכתיב בשדה המוצר.");$("newProduct").focus();return}const recognition=new Speech();recognition.lang="he-IL";recognition.interimResults=false;recognition.maxAlternatives=1;const button=$("voiceBtn");button.disabled=true;button.textContent="🎙️ מקשיב…";recognition.onresult=e=>{const spoken=e.results?.[0]?.[0]?.transcript?.trim();if(spoken){const input=$("newProduct");input.value=(input.value?input.value+" ":"")+spoken;input.focus()}};recognition.onerror=e=>{if(e.error!=="no-speech"&&e.error!=="aborted")alert("לא הצלחנו לזהות דיבור. אפשר להשתמש במיקרופון של המקלדת.")};recognition.onend=()=>{button.disabled=false;button.textContent="🎤"};try{recognition.start()}catch{button.disabled=false;button.textContent="🎤"}}
+function splitSpokenProducts(text){
+ const clean=String(text||"").replace(/[.!?؟؛]/g,",").trim();
+ if(!clean)return [];
+ const chunks=clean.split(/[,،\\n]+/).map(x=>x.trim()).filter(Boolean);
+ return chunks.flatMap(chunk=>chunk.includes(" ")?chunk.split(/\\s+/).filter(Boolean):[chunk]);
+}
+async function addSpokenProducts(spoken){
+ const names=splitSpokenProducts(spoken),l=currentList();
+ if(!names.length||!l)return;
+ const button=$("voiceBtn");button.disabled=true;button.textContent="⏳";
+ let added=0;
+ try{
+  for(const name of names){await api("/api/items","POST",{listId:l.id,name});added++;}
+  await refresh();
+  alert(added===1?"המוצר נוסף לרשימה":added+" מוצרים נוספו לרשימה");
+ }catch(e){
+  await refresh().catch(()=>{});
+  alert("נוספו "+added+" מתוך "+names.length+" מוצרים. "+e.message);
+ }finally{button.disabled=false;button.textContent="🎤";}
+}
+function startVoiceInput(){
+ const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!Speech){alert("הדיבור הישיר לא נתמך בדפדפן הזה. אפשר ללחוץ על המיקרופון במקלדת של האייפון ולהכתיב בשדה המוצר.");$("newProduct").focus();return}
+ const recognition=new Speech();recognition.lang="he-IL";recognition.interimResults=false;recognition.maxAlternatives=1;
+ const button=$("voiceBtn");button.disabled=true;button.textContent="🎙️ מקשיב…";
+ recognition.onresult=e=>{const spoken=e.results?.[0]?.[0]?.transcript?.trim();if(spoken)addSpokenProducts(spoken)};
+ recognition.onerror=e=>{if(e.error!=="no-speech"&&e.error!=="aborted")alert("לא הצלחנו לזהות דיבור. אפשר להשתמש במיקרופון של המקלדת.")};
+ recognition.onend=()=>{if(button.disabled&&button.textContent==="🎙️ מקשיב…"){button.disabled=false;button.textContent="🎤"}};
+ try{recognition.start()}catch{button.disabled=false;button.textContent="🎤"}
+}
 $("voiceBtn").onclick=startVoiceInput;
 $("addBtn").onclick=async()=>{const name=$("newProduct").value.trim(),l=currentList();if(!name||!l)return;try{await api("/api/items","POST",{listId:l.id,name});$("newProduct").value="";await refresh()}catch(e){alert(e.message)}};$("newProduct").addEventListener("keydown",e=>{if(e.key==="Enter")$("addBtn").click()});$("backBtn").onclick=()=>{$("categoryPage").classList.add("hidden");$("home").classList.remove("hidden");currentCategory=""};
 renderFamilies();if(family&&password){loadLists().then(()=>{$("login").classList.add("hidden");$("home").classList.remove("hidden");$("subtitle").textContent=family;drawCategories()}).catch(()=>{family="";password="";sessionStorage.clear();showLogin()})}else showLogin();setInterval(()=>{if(family&&password&&!document.hidden)refresh().catch(()=>{})},12000);
