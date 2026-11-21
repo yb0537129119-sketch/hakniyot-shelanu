@@ -193,3 +193,18 @@ button:active{transform:scale(.985)}
  .product input[type=checkbox]:checked{background:#fff}
  .product span{color:#111!important}
 }
+
+.print-all-area{display:none}
+@media print{
+ body.print-all #categoryPage>*:not(#printAllArea){display:none!important}
+ body.print-all #printAllArea{display:block!important}
+ body.print-all #printAllArea .print-all-header{text-align:center;border-bottom:2px solid #222;padding-bottom:12px;margin-bottom:18px}
+ body.print-all #printAllArea .print-all-header h1{font-size:25px;margin:0 0 8px}
+ body.print-all #printAllArea .print-all-header p{font-size:13px;margin:0}
+ body.print-all #printAllArea .print-category{break-inside:avoid;margin:0 0 16px}
+ body.print-all #printAllArea .print-category h2{font-size:19px;margin:0 0 8px;padding-bottom:5px;border-bottom:1px solid #aaa}
+ body.print-all #printAllArea .print-category h2 small{font-size:13px;font-weight:400}
+ body.print-all #printAllArea ul{list-style:none;margin:0;padding:0}
+ body.print-all #printAllArea li{display:flex;align-items:center;gap:10px;padding:7px 2px;border-bottom:1px solid #e1e1e1;font-size:16px;break-inside:avoid}
+ body.print-all #printAllArea .print-check{width:16px;height:16px;border:1.5px solid #222;display:inline-block;flex:0 0 16px}
+}
