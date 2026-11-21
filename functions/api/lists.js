@@ -4,9 +4,8 @@ import { getDB, validCredentials, json, error } from "./_db.js";
 
 export async function onRequestGet({ request, env }) {
   try {
-    const params = new URL(request.url).searchParams;
-    const family = params.get("family");
-    const password = params.get("password");
+    const family = request.headers.get("X-Family");
+    const password = request.headers.get("X-Password");
 
     if (!await validCredentials(family, password)) {
       return error("שם המשפחה או הסיסמה שגויים", 401);
