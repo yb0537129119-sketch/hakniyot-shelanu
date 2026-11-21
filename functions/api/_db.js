@@ -29,6 +29,8 @@ export async function getDB(env) {
     await env.DB.prepare(statement).run();
   }
 
+  try { await env.DB.prepare("ALTER TABLE shopping_items ADD COLUMN quantity INTEGER NOT NULL DEFAULT 1").run(); } catch {}
+
   // Preserve products that were already present before history was introduced.
   await env.DB.prepare(`
     INSERT OR IGNORE INTO shopping_item_history
