@@ -48,17 +48,40 @@ export async function onRequestGet({ request, env }) {
 
 export async function onRequestPost({ request, env }) {
   try {
-    const { family, password, name } = await request.json();
+    const { family, password, name, action } = await request.json();
 
     if (!await validCredentials(family, password)) {
       return error("שם המשפחה או הסיסמה שגויים", 401);
     }
 
+    const db = await getDB(env);
+
+    if (action === "load") {
+      const { results = [] } = await db.prepare(`
+        SELECT l.id, l.owner_family AS ownerFamily, l.name,
+          l.created_at AS createdAt,
+          CASE WHEN l.owner_family = ? THEN 0 ELSE 1 END AS shared
+        FROM shopping_lists l
+        WHERE l.owner_family = ? OR EXISTS (
+          SELECT 1 FROM shopping_shares s
+          WHERE s.list_id = l.id AND s.family_name = ?
+        )
+        ORDER BY l.created_at DESC
+      `).bind(family, family, family).all();
+
+      const lists = [];
+      for (const row of results) {
+        const { results: items = [] } = await db.prepare(
+          "SELECT id, name, done FROM shopping_items WHERE list_id = ? ORDER BY created_at, rowid"
+        ).bind(row.id).all();
+        lists.push({ ...row, shared: !!row.shared, items: items.map(i => ({ ...i, done: !!i.done })) });
+      }
+      return json({ lists });
+    }
+
     if (typeof name !== "string" || !name.trim() || name.length > 80) {
       return error("צריך לתת שם לרשימה");
     }
-
-    const db = await getDB(env);
 
     const existing = await db.prepare(
       "SELECT id FROM shopping_lists WHERE owner_family = ? AND name = ?"
