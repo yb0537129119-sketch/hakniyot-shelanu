@@ -125,6 +125,20 @@ function startVoiceInput(){
  recognition.onend=()=>{if(button.disabled&&button.textContent==="🎙️ מקשיב…"){button.disabled=false;button.textContent="🎤"}};
  try{recognition.start()}catch{button.disabled=false;button.textContent="🎤"}
 }
+
+async function showHistory(){
+ const panel=$("historyPanel"),box=$("historyProducts"),l=currentList();
+ if(!l)return;
+ panel.classList.remove("hidden");box.innerHTML='<div class="product">טוען היסטוריה…</div>';
+ try{
+  const data=await api("/api/history","POST",{listId:l.id});
+  const rows=data.items||[];
+  box.innerHTML=rows.length?rows.map(x=>'<div class="history-row"><span>'+escapeHtml(x.itemName)+' <small>נוסף '+Number(x.addCount||1)+' פעמים</small></span><button type="button" data-history-add="'+escapeHtml(x.itemName)+'">הוסף לרשימה</button></div>').join(""):'<div class="product">עדיין אין היסטוריה בקטגוריה הזאת</div>';
+  box.querySelectorAll("[data-history-add]").forEach(b=>b.onclick=async()=>{b.disabled=true;try{await api("/api/items","POST",{listId:l.id,name:b.dataset.historyAdd});await refresh();b.textContent="נוסף ✓"}catch(e){b.disabled=false;alert(e.message)}});
+ }catch(e){box.innerHTML='<div class="product">'+escapeHtml(e.message)+'</div>'}
+}
+$("historyBtn").onclick=showHistory;
+$("pdfBtn").onclick=()=>window.print();
 $("voiceBtn").onclick=startVoiceInput;
 $("addBtn").onclick=async()=>{const name=$("newProduct").value.trim(),l=currentList();if(!name||!l)return;try{await api("/api/items","POST",{listId:l.id,name});$("newProduct").value="";await refresh()}catch(e){alert(e.message)}};$("newProduct").addEventListener("keydown",e=>{if(e.key==="Enter")$("addBtn").click()});$("backBtn").onclick=()=>{$("categoryPage").classList.add("hidden");$("home").classList.remove("hidden");currentCategory=""};
 renderFamilies();if(family&&password){saveLoginForSevenDays();loadLists().then(()=>{$("login").classList.add("hidden");$("home").classList.remove("hidden");$("subtitle").textContent=family;drawCategories()}).catch(()=>{family="";password="";sessionStorage.clear();showLogin()})}else showLogin();setInterval(()=>{if(family&&password&&!document.hidden)refresh().catch(()=>{})},12000);
