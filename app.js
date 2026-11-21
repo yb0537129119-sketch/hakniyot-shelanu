@@ -38,9 +38,19 @@ $("closeSettings").onclick=closeSettings;
 $("lightThemeBtn").onclick=()=>applyTheme("light");
 $("darkThemeBtn").onclick=()=>applyTheme("dark");
 applyTheme(localStorage.getItem("shoppingTheme")||"light");
-function applyLargeText(enabled){document.documentElement.classList.toggle("large-text",enabled);localStorage.setItem("shoppingLargeText",enabled?"1":"0");const b=$("largeTextBtn");if(b){b.setAttribute("aria-pressed",enabled?"true":"false");b.textContent=enabled?"🔎 כתב וכפתורים גדולים — פעיל":"🔎 הגדלת כתב וכפתורים";}}
-$("largeTextBtn").onclick=()=>applyLargeText(!document.documentElement.classList.contains("large-text"));
-applyLargeText(localStorage.getItem("shoppingLargeText")==="1");
+let sizeLevel=Math.max(0,Math.min(3,Number(localStorage.getItem("shoppingSizeLevel")||1)));
+function applySizeLevel(level){
+ sizeLevel=Math.max(0,Math.min(3,level));
+ document.documentElement.classList.remove("size-level-0","size-level-1","size-level-2","size-level-3");
+ document.documentElement.classList.add("size-level-"+sizeLevel);
+ localStorage.setItem("shoppingSizeLevel",String(sizeLevel));
+ $("sizeLevelLabel").textContent=["קטן","רגיל","גדול","גדול מאוד"][sizeLevel];
+ $("sizeDownBtn").disabled=sizeLevel===0;$("sizeUpBtn").disabled=sizeLevel===3;
+}
+$("sizeDownBtn").onclick=()=>applySizeLevel(sizeLevel-1);
+$("sizeUpBtn").onclick=()=>applySizeLevel(sizeLevel+1);
+$("largeTextBtn").onclick=()=>applySizeLevel(1);
+applySizeLevel(sizeLevel);
 function startVoiceInput(){const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;if(!Speech){alert("הדיבור הישיר לא נתמך בדפדפן הזה. אפשר ללחוץ על המיקרופון במקלדת של האייפון ולהכתיב בשדה המוצר.");$("newProduct").focus();return}const recognition=new Speech();recognition.lang="he-IL";recognition.interimResults=false;recognition.maxAlternatives=1;const button=$("voiceBtn");button.disabled=true;button.textContent="🎙️ מקשיב…";recognition.onresult=e=>{const spoken=e.results?.[0]?.[0]?.transcript?.trim();if(spoken){const input=$("newProduct");input.value=(input.value?input.value+" ":"")+spoken;input.focus()}};recognition.onerror=e=>{if(e.error!=="no-speech"&&e.error!=="aborted")alert("לא הצלחנו לזהות דיבור. אפשר להשתמש במיקרופון של המקלדת.")};recognition.onend=()=>{button.disabled=false;button.textContent="🎤"};try{recognition.start()}catch{button.disabled=false;button.textContent="🎤"}}
 $("voiceBtn").onclick=startVoiceInput;
 $("addBtn").onclick=async()=>{const name=$("newProduct").value.trim(),l=currentList();if(!name||!l)return;try{await api("/api/items","POST",{listId:l.id,name});$("newProduct").value="";await refresh()}catch(e){alert(e.message)}};$("newProduct").addEventListener("keydown",e=>{if(e.key==="Enter")$("addBtn").click()});$("backBtn").onclick=()=>{$("categoryPage").classList.add("hidden");$("home").classList.remove("hidden");currentCategory=""};
