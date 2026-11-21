@@ -146,6 +146,23 @@ $("pdfBtn").onclick=()=>{
  $("printHeader").innerHTML='<h1>רשימת הקניות של '+escapeHtml(family)+'</h1><h2>'+escapeHtml(currentCategory)+'</h2><p>תאריך: '+date+' · נשארו לקנייה: '+remaining+' מתוך '+items.length+'</p>';
  window.print();
 };
+
+$("pdfAllBtn").onclick=()=>{
+ const now=new Date();
+ const date=now.toLocaleDateString("he-IL",{year:"numeric",month:"long",day:"numeric"});
+ let total=0,sections=[];
+ for(const [name,icon] of categories){
+  const list=lists.find(x=>x.name===name);
+  const items=(list?.items||[]).filter(x=>!x.done);
+  if(!items.length)continue;
+  total+=items.length;
+  sections.push('<section class="print-category"><h2>'+icon+' '+escapeHtml(name)+' <small>('+items.length+')</small></h2><ul>'+items.map(x=>'<li><span class="print-check"></span>'+escapeHtml(x.name)+'</li>').join("")+'</ul></section>');
+ }
+ $("printAllArea").innerHTML='<header class="print-all-header"><h1>רשימת הקניות של '+escapeHtml(family)+'</h1><p>'+date+' · '+total+' מוצרים לקנייה</p></header>'+(sections.join("")||'<p>אין כרגע מוצרים ברשימת הקניות.</p>');
+ document.body.classList.add("print-all");
+ window.print();
+};
+window.addEventListener("afterprint",()=>document.body.classList.remove("print-all"));
 $("voiceBtn").onclick=startVoiceInput;
 $("addBtn").onclick=async()=>{const name=$("newProduct").value.trim(),l=currentList();if(!name||!l)return;try{await api("/api/items","POST",{listId:l.id,name});$("newProduct").value="";await refresh()}catch(e){alert(e.message)}};$("newProduct").addEventListener("keydown",e=>{if(e.key==="Enter")$("addBtn").click()});$("backBtn").onclick=()=>{$("categoryPage").classList.add("hidden");$("home").classList.remove("hidden");currentCategory=""};
 renderFamilies();if(family&&password){saveLoginForSevenDays();loadLists().then(()=>{$("login").classList.add("hidden");$("home").classList.remove("hidden");$("subtitle").textContent=family;drawCategories()}).catch(()=>{family="";password="";sessionStorage.clear();showLogin()})}else showLogin();setInterval(()=>{if(family&&password&&!document.hidden)refresh().catch(()=>{})},12000);
