@@ -2,7 +2,20 @@ const families=["משפחת עמר","משפחת בן גיגי","משפחת זכ�
 const categories=[["סופר","🛒"],["סופר מיוחד","🥩"],["פארם","💊"],["טמבוריה","🔨"],["סטוק / כלי בית","🏠"],["חיות","🐶"],["אחר","📦"],["עליאקספרס","🛍️"]];
 let family=sessionStorage.getItem("shoppingFamily")||"", password=sessionStorage.getItem("shoppingPassword")||"", selected="", currentCategory="", lists=[], busy=false;
 const $=id=>document.getElementById(id);
-async function api(path,method="GET",body=null){const url=new URL(path,location.origin);const headers={"Content-Type":"application/json"};if(method==="GET"){headers["X-Family"]=family;headers["X-Password"]=password}const opts={method,headers,cache:"no-store"};if(body)opts.body=JSON.stringify({...body,family,password});const r=await fetch(url,opts);let data={};try{data=await r.json()}catch{}if(!r.ok)throw new Error(data.error||`שגיאה ${r.status}`);return data;}
+async function api(path,method="GET",body=null){
+  const headers={"Accept":"application/json","Content-Type":"application/json"};
+  if(method==="GET"){headers["X-Family"]=family;headers["X-Password"]=password}
+  const opts={method,headers,cache:"no-store"};
+  if(body)opts.body=JSON.stringify({...body,family,password});
+  let response;
+  try{response=await fetch(path,opts)}catch(e){throw new Error("אין חיבור לשרת. בדקו אינטרנט ונסו שוב.")}
+  const raw=await response.text();
+  let data={};
+  if(raw){try{data=JSON.parse(raw)}catch{throw new Error("השרת החזיר תשובה לא תקינה ("+response.status+").")}}
+  if(!response.ok)throw new Error(data&&data.error?String(data.error):"שגיאת שרת "+response.status);
+  if(!data||typeof data!=="object")throw new Error("השרת החזיר נתונים לא תקינים.");
+  return data;
+}
 function showLogin(){$("login").classList.remove("hidden");$("home").classList.add("hidden");$("categoryPage").classList.add("hidden");}
 function renderFamilies(){$("familyChoices").innerHTML=families.map(f=>`<button data-family="${f}">${f}</button>`).join("");document.querySelectorAll("[data-family]").forEach(b=>b.onclick=()=>{selected=b.dataset.family;document.querySelectorAll("[data-family]").forEach(x=>x.style.borderColor=x===b?"#2f6eea":"#d6e3f5")});}
 async function login(){if(!selected){$("loginError").textContent="בחרו משפחה";return}const p=$("password").value;family=selected;password=p;try{await api("/api/lists");sessionStorage.setItem("shoppingFamily",family);sessionStorage.setItem("shoppingPassword",password);$("loginError").textContent="";$("login").classList.add("hidden");$("home").classList.remove("hidden");$("subtitle").textContent=family;await loadLists();drawCategories()}catch(e){$("loginError").textContent=e.message}}
