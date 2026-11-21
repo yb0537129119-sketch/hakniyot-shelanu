@@ -35,7 +35,8 @@
     <button id="backBtn" class="back">‹ חזרה</button>
     <div class="category-title"><span id="categoryIcon"></span><div><h2 id="categoryName"></h2><p id="count">0 מוצרים לקנייה</p></div></div>
     <div class="add-row">
-      <input id="newProduct" placeholder="הוספת מוצר לרשימה">
+      <input id="newProduct" placeholder="הוספת מוצר לרשימה" maxlength="100" autocomplete="off">
+      <button id="voiceBtn" class="voice-btn" type="button" aria-label="הוספת מוצר בדיבור" title="הוספה בדיבור">🎤</button>
       <button id="addBtn" class="primary">הוספה</button>
     </div>
     <div id="products" class="products"></div>
