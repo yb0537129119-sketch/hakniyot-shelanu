@@ -28,6 +28,16 @@ export async function getDB(env) {
   for (const statement of ddl) {
     await env.DB.prepare(statement).run();
   }
+
+  // Preserve products that were already present before history was introduced.
+  await env.DB.prepare(`
+    INSERT OR IGNORE INTO shopping_item_history
+      (id, family_name, list_id, item_name, add_count)
+    SELECT lower(hex(randomblob(16))), l.owner_family, i.list_id, i.name, 1
+    FROM shopping_items i
+    JOIN shopping_lists l ON l.id = i.list_id
+  `).run();
+
   return env.DB;
 }
 
