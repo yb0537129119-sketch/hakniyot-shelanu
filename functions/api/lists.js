@@ -29,7 +29,7 @@ export async function onRequestGet({ request, env }) {
 
     for (const row of results) {
       const { results: items = [] } = await db.prepare(
-        "SELECT id, name, done FROM shopping_items WHERE list_id = ? ORDER BY created_at, rowid"
+        "SELECT id, name, done, quantity FROM shopping_items WHERE list_id = ? ORDER BY created_at, rowid"
       ).bind(row.id).all();
 
       lists.push({
