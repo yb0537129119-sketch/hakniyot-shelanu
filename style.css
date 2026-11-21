@@ -39,3 +39,16 @@ input{font:inherit;border:2px solid var(--line);border-radius:16px;padding:17px;
 :root[data-theme="dark"] .family-grid button{background:#24334a;color:var(--ink)}
 :root[data-theme="dark"] .category-card,:root[data-theme="dark"] .category-title,:root[data-theme="dark"] .product{background:var(--white);color:var(--ink)}
 :root[data-theme="dark"] .settings-card{background:var(--white)}
+
+/* Full application light/dark appearance */
+.theme-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.theme-choice{min-height:76px;border:2px solid var(--line);border-radius:18px;background:var(--bg);color:var(--ink);font:inherit;font-size:18px;font-weight:800}
+.theme-choice.active{border-color:var(--blue);background:var(--blue);color:#fff;box-shadow:0 0 0 3px rgba(47,110,234,.15)}
+:root[data-theme="dark"] body{background:var(--bg);color:var(--ink)}
+:root[data-theme="dark"] .header,:root[data-theme="dark"] main{color:var(--ink)}
+:root[data-theme="dark"] .login,:root[data-theme="dark"] .category-title,:root[data-theme="dark"] .product,:root[data-theme="dark"] .category-card{background:var(--white);color:var(--ink);border-color:var(--line)}
+:root[data-theme="dark"] .icon-btn,:root[data-theme="dark"] input,:root[data-theme="dark"] .voice-btn,:root[data-theme="dark"] .family-grid button{background:#24334a;color:var(--ink);border-color:var(--line)}
+:root[data-theme="dark"] .primary{background:var(--blue);color:#fff}
+:root[data-theme="dark"] .settings-card{background:var(--white);color:var(--ink)}
+:root[data-theme="dark"] .theme-choice{background:#24334a;color:var(--ink)}
+:root[data-theme="dark"] .theme-choice.active{background:var(--blue);color:#fff}
