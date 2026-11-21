@@ -75,8 +75,31 @@ applySizeLevel(sizeLevel);
 function splitSpokenProducts(text){
  const clean=String(text||"").replace(/[.!?؟؛]/g,",").trim();
  if(!clean)return [];
- const chunks=clean.split(/[,،\n]+/).map(x=>x.trim()).filter(Boolean);
- return chunks.flatMap(chunk=>chunk.split(/\s+/).map(x=>x.trim()).filter(Boolean));
+ const multiWordProducts=[
+  "משחת שיניים","סבון תינוקות","סבון כלים","נוזל כלים","נייר טואלט","נייר מגבת",
+  "שקיות אשפה","אבקת כביסה","מרכך כביסה","נוזל כביסה","מרכך שיער","שמפו תינוקות",
+  "מגבונים לחים","נייר אפייה","נייר כסף","שמן זית","חלב סויה","חלב שקדים",
+  "גבינה צהובה","גבינת שמנת","קוטג תנובה","קפה שחור","תה ירוק","לחם אחיד",
+  "חזה עוף","בשר טחון","דג סלמון","אורז בסמטי","רסק עגבניות","רוטב סויה",
+  "סבון ידיים","קרם גוף","קרם פנים","משחת החתלה","חיתולים לתינוק","מטרנה שלב"
+ ].sort((a,b)=>b.split(/\s+/).length-a.split(/\s+/).length);
+ const phrases=clean.split(/[,،\n]+/).map(x=>x.trim()).filter(Boolean);
+ const output=[];
+ for(const phrase of phrases){
+  const words=phrase.split(/\s+/).filter(Boolean);
+  let i=0;
+  while(i<words.length){
+   let match="";
+   for(const candidate of multiWordProducts){
+    const parts=candidate.split(/\s+/);
+    const actual=words.slice(i,i+parts.length).join(" ");
+    if(actual.localeCompare(candidate,"he",{sensitivity:"base"})===0){match=candidate;break;}
+   }
+   if(match){output.push(match);i+=match.split(/\s+/).length;}
+   else{output.push(words[i]);i++;}
+  }
+ }
+ return output;
 }
 async function addSpokenProducts(spoken){
  const names=splitSpokenProducts(spoken),l=currentList();
