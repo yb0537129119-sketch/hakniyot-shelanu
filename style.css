@@ -221,3 +221,10 @@ body.shopping-mode .product.is-done{opacity:.42}
 body.shopping-mode .product.is-done span{text-decoration:line-through}
 body.shopping-mode .quantity-actions{display:none}
 @media print{.quantity-actions{display:none!important}.item-quantity{display:inline!important}.product b{display:inline!important}}
+
+
+/* Compact all-shopping PDF tab on the home screen */
+.home-top-actions{display:flex;justify-content:flex-start;margin:0 0 14px}
+.home-pdf-tab{border:1.5px solid var(--line);border-radius:999px;background:var(--white);color:var(--ink);padding:9px 16px;min-height:42px;font:inherit;font-size:15px;font-weight:800;box-shadow:0 2px 8px rgba(20,40,71,.06)}
+.home-pdf-tab:active{transform:scale(.98)}
+@media(max-width:520px){.home-top-actions{margin:0 0 12px}.home-pdf-tab{font-size:14px;min-height:40px;padding:8px 14px}}
