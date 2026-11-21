@@ -153,3 +153,24 @@ button:active{transform:scale(.985)}
 .size-level-3 .login h2{font-size:42px}.size-level-3 .family-grid button{font-size:28px;min-height:90px}.size-level-3 input,.size-level-3 .primary{font-size:28px;min-height:82px;padding:23px}
 .size-level-3 .product{font-size:29px;min-height:86px;padding:23px}.size-level-3 .product input{width:36px;height:36px}
 @media(max-width:520px){.size-controls{grid-template-columns:68px 1fr 68px}.size-controls button{height:64px}}
+
+.list-tools{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.secondary-action{min-height:58px;padding:12px;border:2px solid var(--line);border-radius:16px;background:var(--white);color:var(--ink);font:inherit;font-size:17px;font-weight:800}
+.history-panel{margin:14px 0 20px;padding:18px;background:var(--white);border:2px solid var(--line);border-radius:20px}
+.history-panel h3{margin:0;font-size:23px}.history-panel p{color:var(--muted);margin:8px 0 14px}
+.history-products{display:grid;gap:8px}
+.history-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border:1px solid var(--line);border-radius:14px;font-size:18px}
+.history-row small{display:block;color:var(--muted);font-size:13px}
+.history-row button{border:0;border-radius:12px;padding:11px 14px;background:var(--blue);color:white;font:inherit;font-weight:750;white-space:nowrap}
+@media(max-width:520px){.list-tools{grid-template-columns:1fr}.secondary-action{font-size:18px}}
+@media print{
+ body{background:#fff!important;color:#000!important}
+ .header,#settingsPanel,.back,.category-title .category-icon,.add-row,.list-tools,.history-panel,.remove,.product input{display:none!important}
+ main{max-width:none;margin:0;padding:0}
+ #categoryPage{display:block!important}
+ .category-title{border:0;padding:0;margin:0 0 18px;background:#fff!important}
+ .category-title h2{font-size:26px}
+ .products{display:block}
+ .product{display:flex!important;border:0;border-bottom:1px solid #ccc;border-radius:0;padding:10px 0;background:#fff!important;color:#000!important;font-size:18px;break-inside:avoid}
+ .product span{color:#000!important}
+}
