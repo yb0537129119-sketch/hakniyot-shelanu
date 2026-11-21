@@ -138,7 +138,14 @@ async function showHistory(){
  }catch(e){box.innerHTML='<div class="product">'+escapeHtml(e.message)+'</div>'}
 }
 $("historyBtn").onclick=showHistory;
-$("pdfBtn").onclick=()=>window.print();
+$("pdfBtn").onclick=()=>{
+ const now=new Date();
+ const date=now.toLocaleDateString("he-IL",{year:"numeric",month:"long",day:"numeric"});
+ const items=currentList()?.items||[];
+ const remaining=items.filter(x=>!x.done).length;
+ $("printHeader").innerHTML='<h1>רשימת הקניות של '+escapeHtml(family)+'</h1><h2>'+escapeHtml(currentCategory)+'</h2><p>תאריך: '+date+' · נשארו לקנייה: '+remaining+' מתוך '+items.length+'</p>';
+ window.print();
+};
 $("voiceBtn").onclick=startVoiceInput;
 $("addBtn").onclick=async()=>{const name=$("newProduct").value.trim(),l=currentList();if(!name||!l)return;try{await api("/api/items","POST",{listId:l.id,name});$("newProduct").value="";await refresh()}catch(e){alert(e.message)}};$("newProduct").addEventListener("keydown",e=>{if(e.key==="Enter")$("addBtn").click()});$("backBtn").onclick=()=>{$("categoryPage").classList.add("hidden");$("home").classList.remove("hidden");currentCategory=""};
 renderFamilies();if(family&&password){saveLoginForSevenDays();loadLists().then(()=>{$("login").classList.add("hidden");$("home").classList.remove("hidden");$("subtitle").textContent=family;drawCategories()}).catch(()=>{family="";password="";sessionStorage.clear();showLogin()})}else showLogin();setInterval(()=>{if(family&&password&&!document.hidden)refresh().catch(()=>{})},12000);
