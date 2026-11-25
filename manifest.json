@@ -1,1 +1,10 @@
-{"name":"הקניות שלנו","short_name":"הקניות","start_url":"/","display":"standalone","background_color":"#f2f6ff","theme_color":"#f2f6ff","lang":"he","dir":"rtl"}
+{
+  "name": "מעקב האכלות",
+  "short_name": "האכלות",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f8fc",
+  "theme_color": "#f7f8fc",
+  "lang": "he",
+  "dir": "rtl"
+}
