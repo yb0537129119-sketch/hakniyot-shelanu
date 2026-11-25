@@ -1,188 +1,34 @@
 const families=["משפחת עמר","משפחת בן גיגי","משפחת זכאי","משפחת עוזר","ינון"];
-const categories=[["סופר","🛒"],["סופר מיוחד","🥩"],["פארם","💊"],["טמבוריה","🔨"],["סטוק / כלי בית","🏠"],["חיות","🐶"],["אחר","📦"],["עליאקספרס","🛍️"]];
-const LOGIN_STORAGE_KEY="shoppingLogin7Days";
-const LOGIN_TTL=7*24*60*60*1000;
-function readSavedLogin(){
- try{
-  const saved=JSON.parse(localStorage.getItem(LOGIN_STORAGE_KEY)||"null");
-  if(saved&&saved.expiresAt>Date.now()&&saved.family&&saved.password)return saved;
-  localStorage.removeItem(LOGIN_STORAGE_KEY);
- }catch{localStorage.removeItem(LOGIN_STORAGE_KEY)}
- const oldFamily=sessionStorage.getItem("shoppingFamily")||"";
- const oldPassword=sessionStorage.getItem("shoppingPassword")||"";
- return oldFamily&&oldPassword?{family:oldFamily,password:oldPassword}:null;
-}
-const savedLogin=readSavedLogin();
-let family=savedLogin?.family||"", password=savedLogin?.password||"", selected="", currentCategory="", lists=[], busy=false;
-function saveLoginForSevenDays(){
- localStorage.setItem(LOGIN_STORAGE_KEY,JSON.stringify({family,password,expiresAt:Date.now()+LOGIN_TTL}));
- sessionStorage.removeItem("shoppingFamily");sessionStorage.removeItem("shoppingPassword");
-}
-function clearSavedLogin(){
- localStorage.removeItem(LOGIN_STORAGE_KEY);
- sessionStorage.removeItem("shoppingFamily");sessionStorage.removeItem("shoppingPassword");
-}
+const KEY="shoppingLogin7Days";
 const $=id=>document.getElementById(id);
-async function api(path,method="GET",body=null){
-  const opts={method,cache:"no-store",credentials:"same-origin"};
-  if(method!=="GET"){
-    opts.headers={"Accept":"application/json","Content-Type":"application/json"};
-    opts.body=JSON.stringify({...body,family,password});
-  }
-  let response;
-  try{response=await fetch(path,opts)}catch(e){
-    console.error("API connection failed",path,e);
-    throw new Error("החיבור לשרת נכשל. בדקו רשת ונסו שוב.");
-  }
-  const raw=await response.text();
-  let data={};
-  if(raw){try{data=JSON.parse(raw)}catch{throw new Error("השרת החזיר תשובה לא תקינה ("+response.status+").")}}
-  if(!response.ok)throw new Error(data&&data.error?String(data.error):"שגיאת שרת "+response.status);
-  if(!data||typeof data!=="object")throw new Error("השרת החזיר נתונים לא תקינים.");
-  return data;
-}
-function showLogin(){$("login").classList.remove("hidden");$("home").classList.add("hidden");$("categoryPage").classList.add("hidden");}
-function renderFamilies(){$("familyChoices").innerHTML=families.map(f=>`<button data-family="${f}">${f}</button>`).join("");document.querySelectorAll("[data-family]").forEach(b=>b.onclick=()=>{selected=b.dataset.family;document.querySelectorAll("[data-family]").forEach(x=>x.style.borderColor=x===b?"#2f6eea":"#d6e3f5")});}
-async function login(){if(!selected){$("loginError").textContent="בחרו משפחה";return}const p=$("password").value;family=selected;password=p;try{await loadLists();saveLoginForSevenDays();$("loginError").textContent="";$("login").classList.add("hidden");$("home").classList.remove("hidden");$("subtitle").textContent=family;drawCategories()}catch(e){$("loginError").textContent=e.message}}
-async function loadLists(){const d=await api("/api/lists","POST",{action:"load"});lists=d.lists||[];for(const [name] of categories){if(!lists.some(x=>x.name===name)){const l=await api("/api/lists","POST",{name});lists.push(l)}}}
-function drawCategories(){$("categories").innerHTML=categories.map(([name,icon])=>{const l=lists.find(x=>x.name===name);const count=l?(l.items||[]).filter(x=>!x.done).length:0;return `<button class="category-card" data-cat="${name}"><span class="chevron">›</span><span class="cat-info"><span class="cat-text"><h2>${name}</h2><p>${count} מוצרים לקנייה</p></span><span class="cat-icon">${icon}</span></span></button>`}).join("");document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>openCategory(b.dataset.cat));}
-function currentList(){return lists.find(x=>x.name===currentCategory)}
-function openCategory(name){currentCategory=name;$("home").classList.add("hidden");$("categoryPage").classList.remove("hidden");$("categoryName").textContent=name;$("categoryIcon").textContent=(categories.find(x=>x[0]===name)||[])[1];renderProducts()}
-function renderProducts(){const l=currentList(),items=l?.items||[];$("count").textContent=`${items.filter(x=>!x.done).length} מוצרים לקנייה`;$ ("products").innerHTML=items.map(x=>`<label class="product ${x.done?"is-done":""}"><input type="checkbox" data-check="${x.id}" ${x.done?"checked":""}><span>${escapeHtml(x.name)} <b class="item-quantity">×${Number(x.quantity||1)}</b></span><span class="quantity-actions"><button type="button" data-qty="-1" data-id="${x.id}">−</button><button type="button" data-qty="1" data-id="${x.id}">+</button></span><button class="remove" data-remove="${x.id}" type="button">×</button></label>`).join("")||'<div class="product">אין מוצרים ברשימה עדיין</div>';document.querySelectorAll("[data-check]").forEach(c=>c.onchange=async()=>{try{await api("/api/items","PATCH",{id:c.dataset.check,done:c.checked});await refresh()}catch(e){alert(e.message)}});document.querySelectorAll("[data-qty]").forEach(b=>b.onclick=async()=>{const item=items.find(x=>x.id===b.dataset.id);const quantity=Math.max(1,Math.min(99,Number(item?.quantity||1)+Number(b.dataset.qty)));try{await api("/api/items","PATCH",{id:b.dataset.id,quantity});await refresh()}catch(e){alert(e.message)}});document.querySelectorAll("[data-remove]").forEach(b=>b.onclick=async()=>{try{await api("/api/items","DELETE",{id:b.dataset.remove});await refresh()}catch(e){alert(e.message)}})}
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-async function refresh(){await loadLists();drawCategories();if(currentCategory)renderProducts()}
-$("loginBtn").onclick=login;$("familyBtn").onclick=()=>{clearSavedLogin();family="";password="";selected="";$("password").value="";renderFamilies();showLogin()};function applyTheme(theme){document.documentElement.dataset.theme=theme;localStorage.setItem("shoppingTheme",theme);$("lightThemeBtn")?.classList.toggle("active",theme==="light");$("darkThemeBtn")?.classList.toggle("active",theme==="dark");}
-function openSettings(){$("settingsPanel").classList.remove("hidden");}
-function closeSettings(){$("settingsPanel").classList.add("hidden");}
-$("settingsBtn").onclick=openSettings;
-$("closeSettings").onclick=closeSettings;
-$("lightThemeBtn").onclick=()=>applyTheme("light");
-$("darkThemeBtn").onclick=()=>applyTheme("dark");
-applyTheme(localStorage.getItem("shoppingTheme")||"light");
-let sizeLevel=Math.max(0,Math.min(3,Number(localStorage.getItem("shoppingSizeLevel")||1)));
-function applySizeLevel(level){
- sizeLevel=Math.max(0,Math.min(3,level));
- document.documentElement.classList.remove("size-level-0","size-level-1","size-level-2","size-level-3");
- document.documentElement.classList.add("size-level-"+sizeLevel);
- localStorage.setItem("shoppingSizeLevel",String(sizeLevel));
- $("sizeLevelLabel").textContent=["קטן","רגיל","גדול","גדול מאוד"][sizeLevel];
- $("sizeDownBtn").disabled=sizeLevel===0;$("sizeUpBtn").disabled=sizeLevel===3;
-}
-$("sizeDownBtn").onclick=()=>applySizeLevel(sizeLevel-1);
-$("sizeUpBtn").onclick=()=>applySizeLevel(sizeLevel+1);
-$("largeTextBtn").onclick=()=>applySizeLevel(1);
-applySizeLevel(sizeLevel);
-function splitSpokenProducts(text){
- const clean=String(text||"").replace(/[.!?؟؛]/g,",").trim();
- if(!clean)return [];
- const multiWordProducts=[
-  "משחת שיניים","סבון תינוקות","סבון כלים","נוזל כלים","נייר טואלט","נייר מגבת",
-  "שקיות אשפה","אבקת כביסה","מרכך כביסה","נוזל כביסה","מרכך שיער","שמפו תינוקות",
-  "מגבונים לחים","נייר אפייה","נייר כסף","שמן זית","חלב סויה","חלב שקדים",
-  "גבינה צהובה","גבינת שמנת","קוטג תנובה","קפה שחור","תה ירוק","לחם אחיד",
-  "חזה עוף","בשר טחון","דג סלמון","אורז בסמטי","רסק עגבניות","רוטב סויה",
-  "סבון ידיים","קרם גוף","קרם פנים","משחת החתלה","חיתולים לתינוק","מטרנה שלב"
- ].sort((a,b)=>b.split(/\s+/).length-a.split(/\s+/).length);
- const phrases=clean.split(/[,،\n]+/).map(x=>x.trim()).filter(Boolean);
- const output=[];
- for(const phrase of phrases){
-  const words=phrase.split(/\s+/).filter(Boolean);
-  let i=0;
-  while(i<words.length){
-   let match="";
-   for(const candidate of multiWordProducts){
-    const parts=candidate.split(/\s+/);
-    const actual=words.slice(i,i+parts.length).join(" ");
-    if(actual.localeCompare(candidate,"he",{sensitivity:"base"})===0){match=candidate;break;}
-   }
-   if(match){output.push(match);i+=match.split(/\s+/).length;}
-   else{output.push(words[i]);i++;}
-  }
- }
- return output;
-}
-async function addSpokenProducts(spoken){
- const names=splitSpokenProducts(spoken),l=currentList();
- if(!names.length||!l)return;
- const button=$("voiceBtn");button.disabled=true;button.textContent="⏳";
- let added=0;
- try{
-  for(const name of names){await api("/api/items","POST",{listId:l.id,name});added++;}
-  await refresh();
-  alert(added===1?"המוצר נוסף לרשימה":added+" מוצרים נוספו לרשימה");
- }catch(e){
-  await refresh().catch(()=>{});
-  alert("נוספו "+added+" מתוך "+names.length+" מוצרים. "+e.message);
- }finally{button.disabled=false;button.textContent="🎤";}
-}
-function startVoiceInput(){
- const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;
- if(!Speech){alert("הדיבור הישיר לא נתמך בדפדפן הזה. אפשר ללחוץ על המיקרופון במקלדת של האייפון ולהכתיב בשדה המוצר.");$("newProduct").focus();return}
- const recognition=new Speech();recognition.lang="he-IL";recognition.interimResults=false;recognition.maxAlternatives=1;
- const button=$("voiceBtn");button.disabled=true;button.textContent="🎙️ מקשיב…";
- recognition.onresult=e=>{const spoken=e.results?.[0]?.[0]?.transcript?.trim();if(spoken)addSpokenProducts(spoken)};
- recognition.onerror=e=>{if(e.error!=="no-speech"&&e.error!=="aborted")alert("לא הצלחנו לזהות דיבור. אפשר להשתמש במיקרופון של המקלדת.")};
- recognition.onend=()=>{if(button.disabled&&button.textContent==="🎙️ מקשיב…"){button.disabled=false;button.textContent="🎤"}};
- try{recognition.start()}catch{button.disabled=false;button.textContent="🎤"}
-}
-
-async function showHistory(){
- const panel=$("historyPanel"),box=$("historyProducts"),l=currentList();
- if(!l)return;
- panel.classList.remove("hidden");box.innerHTML='<div class="product">טוען היסטוריה…</div>';
- try{
-  const data=await api("/api/history","POST",{listId:l.id});
-  const rows=data.items||[];
-  box.innerHTML=rows.length?rows.map(x=>'<div class="history-row"><span>'+escapeHtml(x.itemName)+' <small>נוסף '+Number(x.addCount||1)+' פעמים</small></span><button type="button" data-history-add="'+escapeHtml(x.itemName)+'">הוסף לרשימה</button></div>').join(""):'<div class="product">עדיין אין היסטוריה בקטגוריה הזאת</div>';
-  box.querySelectorAll("[data-history-add]").forEach(b=>b.onclick=async()=>{b.disabled=true;try{await api("/api/items","POST",{listId:l.id,name:b.dataset.historyAdd});await refresh();b.textContent="נוסף ✓"}catch(e){b.disabled=false;alert(e.message)}});
- }catch(e){box.innerHTML='<div class="product">'+escapeHtml(e.message)+'</div>'}
-}
-$("historyBtn").onclick=showHistory;
-
-$("shoppingModeBtn").onclick=()=>{
- document.body.classList.toggle("shopping-mode");
- $("shoppingModeBtn").textContent=document.body.classList.contains("shopping-mode")?"✓ יציאה ממצב קניות":"🛒 מצב קניות";
- renderProducts();
-};
-$("favoritesBtn").onclick=async()=>{
- const l=currentList();if(!l)return;
- try{
-  const data=await api("/api/history","POST",{listId:l.id});
-  const frequent=(data.items||[]).filter(x=>Number(x.addCount)>=2);
-  if(!frequent.length){alert("עדיין אין מוצרים קבועים. הוסיפו מוצרים כמה פעמים והם יופיעו כאן.");return}
-  const chosen=prompt("המוצרים הקבועים שלך:\n"+frequent.map((x,i)=>(i+1)+". "+x.itemName+" (נוסף "+x.addCount+" פעמים)").join("\n")+"\n\nהקלידו מספרים להוספה, מופרדים בפסיקים. השאירו ריק לביטול.");
-  if(!chosen)return;
-  const indices=chosen.split(/[,，\s]+/).map(x=>Number(x)-1).filter(i=>Number.isInteger(i)&&i>=0&&i<frequent.length);
-  for(const i of [...new Set(indices)])await api("/api/items","POST",{listId:l.id,name:frequent[i].itemName});
-  await refresh();
- }catch(e){alert(e.message)}
-};
-
-$("pdfBtn").onclick=()=>{
- const now=new Date();
- const date=now.toLocaleDateString("he-IL",{year:"numeric",month:"long",day:"numeric"});
- const items=currentList()?.items||[];
- const remaining=items.filter(x=>!x.done).length;
- $("printHeader").innerHTML='<h1>רשימת הקניות של '+escapeHtml(family)+'</h1><h2>'+escapeHtml(currentCategory)+'</h2><p>תאריך: '+date+' · נשארו לקנייה: '+remaining+' מתוך '+items.length+'</p>';
- window.print();
-};
-
-$("pdfAllBtn").onclick=()=>{
- const now=new Date();
- const date=now.toLocaleDateString("he-IL",{year:"numeric",month:"long",day:"numeric"});
- let total=0,sections=[];
- for(const [name,icon] of categories){
-  const list=lists.find(x=>x.name===name);
-  const items=(list?.items||[]).filter(x=>!x.done);
-  if(!items.length)continue;
-  total+=items.length;
-  sections.push('<section class="print-category"><h2>'+icon+' '+escapeHtml(name)+' <small>('+items.length+')</small></h2><ul>'+items.map(x=>'<li><span class="print-check"></span>'+escapeHtml(x.name)+' <b>×'+Number(x.quantity||1)+'</b></li>').join("")+'</ul></section>');
- }
- $("printAllArea").innerHTML='<header class="print-all-header"><h1>רשימת הקניות של '+escapeHtml(family)+'</h1><p>'+date+' · '+total+' מוצרים לקנייה</p></header>'+(sections.join("")||'<p>אין כרגע מוצרים ברשימת הקניות.</p>');
- document.body.classList.add("print-all");
- window.print();
-};
-window.addEventListener("afterprint",()=>document.body.classList.remove("print-all"));
-$("voiceBtn").onclick=startVoiceInput;
-$("addBtn").onclick=async()=>{const name=$("newProduct").value.trim(),l=currentList(),quantity=Math.max(1,Math.min(99,Number.parseInt($("newQuantity").value,10)||1));if(!name||!l)return;try{await api("/api/items","POST",{listId:l.id,name,quantity});$("newProduct").value="";$("newQuantity").value="1";await refresh()}catch(e){alert(e.message)}};$("newProduct").addEventListener("keydown",e=>{if(e.key==="Enter")$("addBtn").click()});$("backBtn").onclick=()=>{$("categoryPage").classList.add("hidden");$("home").classList.remove("hidden");currentCategory=""};
-renderFamilies();if(family&&password){saveLoginForSevenDays();loadLists().then(()=>{$("login").classList.add("hidden");$("home").classList.remove("hidden");$("subtitle").textContent=family;drawCategories()}).catch(()=>{family="";password="";sessionStorage.clear();showLogin()})}else showLogin();setInterval(()=>{if(family&&password&&!document.hidden)refresh().catch(()=>{})},12000);
+let family="",password="",selected="",feeds=[],feedType="בקבוק",nextDue="";
+function localValue(d=new Date()){const x=new Date(d.getTime()-d.getTimezoneOffset()*60000);return x.toISOString().slice(0,16)}
+function dateLabel(v){if(!v)return "לא הוגדרה";const d=new Date(v);return d.toLocaleString("he-IL",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit"})}
+function timeLabel(v){if(!v)return "";return new Date(v).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"})}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+async function api(action,extra={}){const r=await fetch("/api/feeds.js",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},cache:"no-store",body:JSON.stringify({family,password,action,...extra})});const raw=await r.text();let data={};try{data=JSON.parse(raw)}catch{}if(!r.ok)throw new Error(data.error||"שגיאה בשמירת הנתונים");return data}
+function savedLogin(){try{const x=JSON.parse(localStorage.getItem(KEY)||"null");if(x&&x.expiresAt>Date.now())return x}catch{}return null}
+function showLogin(){ $("login").classList.remove("hidden");$("tracker").classList.add("hidden")}
+function renderFamilies(){$("familyChoices").innerHTML=families.map(f=>'<button type="button" class="family-choice" data-family="'+f+'">'+f+'</button>').join("");document.querySelectorAll("[data-family]").forEach(b=>b.onclick=()=>{selected=b.dataset.family;document.querySelectorAll("[data-family]").forEach(x=>x.classList.toggle("selected",x===b))})}
+async function enter(){if(!selected){$("loginError").textContent="בחרו משפחה";return}family=selected;password=$("password").value;try{await load();localStorage.setItem(KEY,JSON.stringify({family,password,expiresAt:Date.now()+7*86400000}));showTracker()}catch(e){$("loginError").textContent=e.message}}
+async function load(){const d=await api("load");feeds=d.feeds||[]}
+function showTracker(){$("login").classList.add("hidden");$("tracker").classList.remove("hidden");$("subtitle").textContent=family;render()}
+function render(){renderLast();renderHistory();renderNext()}
+function renderLast(){const f=feeds[0];$("lastFeed").classList.toggle("empty",!f);if(!f){$("lastFeed").textContent="עדיין לא נרשמו האכלות";return}const details=[f.feedType,f.amountMl?f.amountMl+" מ״ל":"",f.durationMinutes?f.durationMinutes+" דקות":"",f.side||"",f.notes||""].filter(Boolean).join(" · ");$("lastFeed").innerHTML='<div class="last-time">'+timeLabel(f.fedAt)+'</div><div class="last-date">'+dateLabel(f.fedAt)+'</div><div class="last-details">'+esc(details)+'</div>'}
+function renderNext(){const fromFeed=feeds.find(f=>f.nextDueAt)?.nextDueAt;const due=nextDue||fromFeed;$("nextTime").textContent=due?dateLabel(due):"לא הוגדרה שעה";const input=$("nextDueInput");if(document.activeElement!==input)input.value=due||"";if(due){const diff=new Date(due)-Date.now();$("nextStatus").textContent=diff<0?"עבר הזמן":"מתוכנן";$("nextStatus").className="status-pill "+(diff<0?"late":"");$("countdown").textContent=diff<0?"עברו "+durationText(-diff)+" מהמועד שהוגדר": "נותרו "+durationText(diff)}else{$("nextStatus").textContent="ממתין לעדכון";$("countdown").textContent="רשמו האכלה והגדירו מתי הבאה"}}
+function durationText(ms){const n=Math.max(0,Math.floor(ms/60000)),h=Math.floor(n/60),m=n%60;return h? h+" שעות ו־"+m+" דקות":m+" דקות"}
+function renderHistory(){$("feedCount").textContent=feeds.length;$("feedHistory").innerHTML=feeds.length?feeds.map(f=>{const d=new Date(f.fedAt),day=d.toLocaleDateString("he-IL",{weekday:"long",day:"numeric",month:"long"});const meta=[f.feedType,f.amountMl?f.amountMl+" מ״ל":"",f.durationMinutes?f.durationMinutes+" דקות":"",f.side||""].filter(Boolean).join(" · ");return '<article class="feed-row"><div class="timeline-dot"></div><div class="feed-main"><div class="feed-row-top"><strong>'+timeLabel(f.fedAt)+'</strong><span>'+day+'</span></div><div class="feed-meta">'+esc(meta)+'</div>'+(f.nextDueAt?'<div class="feed-next">הבאה: '+dateLabel(f.nextDueAt)+'</div>':'')+(f.notes?'<div class="feed-notes">'+esc(f.notes)+'</div>':'')+'</div><div class="feed-actions"><button type="button" data-edit="'+f.id+'">עריכה</button><button type="button" class="delete-btn" data-delete="'+f.id+'">מחיקה</button></div></article>'}).join(""):'<div class="empty-history">כאן יופיעו ההאכלות שתשמרו</div>';document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openEdit(feeds.find(f=>f.id===b.dataset.edit)));document.querySelectorAll("[data-delete]").forEach(b=>b.onclick=async()=>{if(!confirm("למחוק את רישום ההאכלה?"))return;try{await api("delete",{id:b.dataset.delete});await load();render()}catch(e){alert(e.message)}})}
+function setType(t){feedType=t;document.querySelectorAll("[data-type]").forEach(b=>b.classList.toggle("active",b.dataset.type===t));$("bottleFields").classList.toggle("hidden",t!=="בקבוק");$("nursingFields").classList.toggle("hidden",t!=="הנקה")}
+function openEdit(f){if(!f)return;$("editId").value=f.id;$("editFedAt").value=f.fedAt||"";$("editType").value=f.feedType;$("editAmount").value=f.amountMl||"";$("editDuration").value=f.durationMinutes||"";$("editSide").value=f.side||"";$("editNext").value=f.nextDueAt||"";$("editNotes").value=f.notes||"";$("editModal").classList.remove("hidden")}
+function closeEdit(){$("editModal").classList.add("hidden")}
+$("loginBtn").onclick=enter;$("password").addEventListener("keydown",e=>{if(e.key==="Enter")enter()});$("switchBtn").onclick=()=>{localStorage.removeItem(KEY);family="";password="";selected="";$("password").value="";renderFamilies();showLogin()};
+$("themeBtn").onclick=()=>{const dark=document.documentElement.dataset.theme!=="dark";document.documentElement.dataset.theme=dark?"dark":"light";localStorage.setItem("babyTheme",dark?"dark":"light");$("themeBtn").textContent=dark?"☀":"☾"};
+document.documentElement.dataset.theme=localStorage.getItem("babyTheme")||"light";$("themeBtn").textContent=document.documentElement.dataset.theme==="dark"?"☀":"☾";
+document.querySelectorAll("[data-type]").forEach(b=>b.onclick=()=>setType(b.dataset.type));setType("בקבוק");
+$("fedAt").value=localValue();
+$("feedForm").onsubmit=async e=>{e.preventDefault();const payload={fedAt:$("fedAt").value,feedType,amountMl:feedType==="בקבוק"?$("amountMl").value:"",durationMinutes:feedType==="הנקה"?$("durationMinutes").value:"",side:feedType==="הנקה"?$("side").value:"",nextDueAt:$("feedNextDue").value,notes:$("notes").value};try{await api("add",payload);if(payload.nextDueAt)nextDue=payload.nextDueAt;await load();render();$("feedForm").reset();$("fedAt").value=localValue();$("feedNextDue").value="";$("notes").value="";$("amountMl").value="";$("durationMinutes").value="";$("side").value="";setType("בקבוק")}catch(err){alert(err.message)}};
+$("saveNextBtn").onclick=()=>{nextDue=$("nextDueInput").value;renderNext()};
+$("editForm").onsubmit=async e=>{e.preventDefault();const payload={id:$("editId").value,fedAt:$("editFedAt").value,feedType:$("editType").value,amountMl:$("editAmount").value,durationMinutes:$("editDuration").value,side:$("editSide").value,nextDueAt:$("editNext").value,notes:$("editNotes").value};try{await api("update",payload);if(payload.nextDueAt)nextDue=payload.nextDueAt;await load();render();closeEdit()}catch(err){alert(err.message)}};
+$("closeEdit").onclick=closeEdit;$("editModal").addEventListener("click",e=>{if(e.target===$("editModal"))closeEdit()});
+renderFamilies();const saved=savedLogin();if(saved){family=saved.family;password=saved.password;load().then(showTracker).catch(()=>{localStorage.removeItem(KEY);showLogin()})}else showLogin();
+setInterval(()=>{if(family){renderNext()}},15000);
