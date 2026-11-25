@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f7f8fc">
 <link rel="manifest" href="/manifest.json">
-<link rel="stylesheet" href="/style.css?v=20261125-baby3">
+<link rel="stylesheet" href="/style.css?v=20261125-baby4">
 <title>ההאכלות של הקטנה</title>
 </head>
 <body>
@@ -21,7 +21,7 @@
       <div id="nextTime" class="next-time">לא הוגדרה שעה</div>
       <div id="countdown" class="countdown">רשמו האכלה והגדירו מתי הבאה</div>
       <div class="next-edit"><label for="nextDueInput">שעת הארוחה הבאה</label><input id="nextDueInput" type="datetime-local"><button id="saveNextBtn" class="outline-btn" type="button">שמירת שעה</button></div>
-      <p class="hint">השעה נקבעת על ידכם לפי ההנחיות שקיבלתם. אפשר לשנות בכל רגע.</p>
+      <div class="reminder-row"><button id="enableReminderBtn" class="outline-btn" type="button">🔔 הפעלת תזכורות בטלפון</button><span id="reminderStatus" class="hint">לתזכורת בזמן, השאירו את האתר פתוח.</span></div><p class="hint">השעה נקבעת על ידכם לפי ההנחיות שקיבלתם. אפשר לשנות בכל רגע.</p>
     </section>
     <button id="quickFeedBtn" class="quick-feed-btn" type="button">🍼 רישום האכלה עכשיו</button>
     <section class="last-card panel">
@@ -40,6 +40,7 @@
         <button class="primary full save-feed" type="submit">שמירת ההאכלה</button>
       </form>
     </section>
+    <section class="panel diaper-panel"><div class="section-heading"><div><span class="eyebrow">מעקב נוסף</span><h3>החלפת חיתול</h3></div><span class="last-icon">🧷</span></div><form id="diaperForm"><div class="field"><label for="diaperAt">מתי החלפנו?</label><input id="diaperAt" type="datetime-local" required></div><div class="field"><label>מה היה בחיתול?</label><div class="type-options"><button type="button" class="type-option active" data-diaper="פיפי">💧 פיפי</button><button type="button" class="type-option" data-diaper="קקי">💩 קקי</button><button type="button" class="type-option" data-diaper="שניהם">🧷 שניהם</button></div></div><div class="field"><label for="diaperNotes">הערה (לא חובה)</label><input id="diaperNotes" maxlength="300" placeholder="הערה קצרה"></div><button class="primary full" type="submit">שמירת החלפת חיתול</button></form><div class="diaper-history-title">החלפות אחרונות</div><div id="diaperHistory" class="feed-history"><div class="empty-history">עדיין אין רישומים</div></div></section>
     <section class="history-section">
       <div class="history-title"><div><span class="eyebrow">כל הרישומים</span><h3>היסטוריית האכלות</h3></div><span id="feedCount" class="count-pill">0</span></div>
       <div id="feedHistory" class="feed-history"><div class="empty-history">כאן יופיעו ההאכלות שתשמרו</div></div>
@@ -61,5 +62,5 @@
   <button class="primary full" type="submit">שמירת שינויים</button>
  </form></div>
 </div>
-<script src="/app.js?v=20261125-baby3"></script>
+<script src="/app.js?v=20261125-baby4"></script>
 </body></html>
