@@ -27,7 +27,7 @@ export async function onRequestPost({ request, env }) {
     if (action === "add") {
       const { fedAt, feedType, amountMl, durationMinutes, side, nextDueAt, notes } = body;
       if (!fedAt || Number.isNaN(Date.parse(fedAt))) return error("צריך לבחור מתי הייתה ההאכלה");
-      if (!["בקבוק", "הנקה", "אחר"].includes(feedType)) return error("סוג האכלה לא תקין");
+      if (!["בקבוק", "הנקה", "אחר", "רישום מהיר"].includes(feedType)) return error("סוג האכלה לא תקין");
       const amount = amountMl === "" || amountMl == null ? null : Number(amountMl);
       const duration = durationMinutes === "" || durationMinutes == null ? null : Number(durationMinutes);
       if (amount !== null && (!Number.isInteger(amount) || amount < 1 || amount > 2000)) return error("כמות לא תקינה");
@@ -42,7 +42,7 @@ export async function onRequestPost({ request, env }) {
 
     if (action === "update") {
       const { id, fedAt, feedType, amountMl, durationMinutes, side, nextDueAt, notes } = body;
-      if (!id || !fedAt || Number.isNaN(Date.parse(fedAt)) || !["בקבוק", "הנקה", "אחר"].includes(feedType)) return error("פרטי ההאכלה לא תקינים");
+      if (!id || !fedAt || Number.isNaN(Date.parse(fedAt)) || !["בקבוק", "הנקה", "אחר", "רישום מהיר"].includes(feedType)) return error("פרטי ההאכלה לא תקינים");
       const amount = amountMl === "" || amountMl == null ? null : Number(amountMl);
       const duration = durationMinutes === "" || durationMinutes == null ? null : Number(durationMinutes);
       if (amount !== null && (!Number.isInteger(amount) || amount < 1 || amount > 2000)) return error("כמות לא תקינה");
