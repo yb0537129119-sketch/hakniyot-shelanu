@@ -15,6 +15,7 @@ function renderHistory(){$("feedCount").textContent=feeds.length;$("feedHistory"
 function setType(t){feedType=t;document.querySelectorAll("[data-type]").forEach(b=>b.classList.toggle("active",b.dataset.type===t));$("bottleFields").classList.toggle("hidden",t!=="בקבוק");$("nursingFields").classList.toggle("hidden",t!=="הנקה")}
 function openEdit(f){if(!f)return;$("editId").value=f.id;$("editFedAt").value=f.fedAt||"";$("editType").value=f.feedType;$("editAmount").value=f.amountMl||"";$("editDuration").value=f.durationMinutes||"";$("editSide").value=f.side||"";$("editNext").value=f.nextDueAt||"";$("editNotes").value=f.notes||"";$("editModal").classList.remove("hidden")}
 function closeEdit(){$("editModal").classList.add("hidden")}
+$("quickFeedBtn").onclick=async()=>{const btn=$("quickFeedBtn");btn.disabled=true;btn.textContent="שומר…";try{await api("add",{fedAt:localValue(),feedType:"רישום מהיר",notes:""});await load();render()}catch(e){alert(e.message)}finally{btn.disabled=false;btn.textContent="🍼 רישום האכלה עכשיו"}};
 $("themeBtn").onclick=()=>{const dark=document.documentElement.dataset.theme!=="dark";document.documentElement.dataset.theme=dark?"dark":"light";localStorage.setItem("babyTheme",dark?"dark":"light");$("themeBtn").textContent=dark?"☀":"☾"};
 document.documentElement.dataset.theme=localStorage.getItem("babyTheme")||"light";$("themeBtn").textContent=document.documentElement.dataset.theme==="dark"?"☀":"☾";
 document.querySelectorAll("[data-type]").forEach(b=>b.onclick=()=>setType(b.dataset.type));setType("בקבוק");$("fedAt").value=localValue();
