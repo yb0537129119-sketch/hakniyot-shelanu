@@ -3,61 +3,75 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f2f6ff">
+<meta name="theme-color" content="#f7f8fc">
 <link rel="manifest" href="/manifest.json">
-<link rel="stylesheet" href="/style.css?v=20261122-emerald-redesign2">
-<title>הקניות שלנו</title>
+<link rel="stylesheet" href="/style.css?v=20261125-baby1">
+<title>ההאכלות של הקטנה</title>
 </head>
 <body>
-<header class="header">
-  <div class="actions">
-    <button class="icon-btn" id="settingsBtn" aria-label="הגדרות"><span>⚙️</span><small>הגדרות</small></button>
-    <button class="icon-btn" id="familyBtn" aria-label="החלפת משפחה"><span>👥</span><small>החלפת משפחה</small></button>
-  </div>
-  <div class="heading"><h1>הקניות שלנו</h1><p id="subtitle">הבית שלנו</p></div>
+<header class="topbar">
+  <div class="brand"><div class="brand-mark">♡</div><div><h1>ההאכלות של הקטנה</h1><p id="subtitle">מעקב קטן, שקט ומסודר</p></div></div>
+  <button id="themeBtn" class="theme-btn" type="button" aria-label="החלפת מצב תצוגה">☾</button>
 </header>
-
-<section id="settingsPanel" class="settings-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
-  <div class="settings-card">
-    <div class="settings-head"><h2 id="settingsTitle">הגדרות</h2><button id="closeSettings" class="settings-close" aria-label="סגירה">×</button></div>
-    <p>התאימו את האתר שיהיה נוח לקריאה ולשימוש</p>
-    <div class="theme-options">
-      <button id="lightThemeBtn" class="theme-choice" type="button">☀️ מצב בהיר</button>
-      <button id="darkThemeBtn" class="theme-choice" type="button">🌙 מצב כהה</button>
-    </div>
-    <div class="size-controls" aria-label="שינוי גודל כתב וכפתורים"><button id="sizeDownBtn" type="button" aria-label="הקטנת כתב וכפתורים">−</button><span id="sizeLevelLabel" aria-live="polite">גודל רגיל</span><button id="sizeUpBtn" type="button" aria-label="הגדלת כתב וכפתורים">+</button></div><button id="largeTextBtn" class="large-text-toggle" type="button">איפוס גודל</button>
-  </div>
-</section>
 <main>
-  <section id="login" class="login hidden">
-    <h2>שלום למשפחה!</h2>
-    <p>בחרו משפחה והזינו סיסמה</p>
+  <section id="login" class="panel login">
+    <div class="hero-icon">🍼</div>
+    <h2>ברוכים הבאים</h2>
+    <p>בחרו את המשפחה והיכנסו למעקב האכלות</p>
     <div id="familyChoices" class="family-grid"></div>
     <input id="password" type="password" placeholder="סיסמת המשפחה" autocomplete="current-password">
-    <button id="loginBtn" class="primary">כניסה</button>
+    <button id="loginBtn" class="primary full">כניסה למעקב</button>
     <p id="loginError" class="error"></p>
   </section>
 
-  <section id="home">
-    <div class="home-top-actions"><button id="pdfAllBtn" type="button" class="home-pdf-tab">🧾 PDF לכל הקניות</button></div>
-    <div id="categories" class="categories"></div>
-  </section>
+  <section id="tracker" class="hidden">
+    <div class="welcome-row"><div><span class="eyebrow">היומן של הקטנה</span><h2>מעקב האכלות</h2></div><button id="switchBtn" class="text-btn" type="button">החלפת משפחה</button></div>
+    <section class="next-card">
+      <div class="next-top"><span>⏰ הארוחה הבאה</span><span id="nextStatus" class="status-pill">ממתין לעדכון</span></div>
+      <div id="nextTime" class="next-time">לא הוגדרה שעה</div>
+      <div id="countdown" class="countdown">רשמו האכלה והגדירו מתי הבאה</div>
+      <div class="next-edit"><label for="nextDueInput">שעת הארוחה הבאה</label><input id="nextDueInput" type="datetime-local"><button id="saveNextBtn" class="outline-btn" type="button">שמירת שעה</button></div>
+      <p class="hint">השעה נקבעת על ידכם לפי ההנחיות שקיבלתם. אפשר לשנות בכל רגע.</p>
+    </section>
 
-  <section id="categoryPage" class="hidden">
-    <div id="printHeader" class="print-header"></div><div id="printAllArea" class="print-all-area"></div>
-    <button id="backBtn" class="back">‹ חזרה</button>
-    <div class="category-title"><span id="categoryIcon"></span><div><h2 id="categoryName"></h2><p id="count">0 מוצרים לקנייה</p></div></div>
-    <div class="add-row">
-      <input id="newProduct" placeholder="הוספת מוצר לרשימה" maxlength="100" autocomplete="off">
-      <button id="voiceBtn" class="voice-btn" type="button" aria-label="הוספת מוצר בדיבור" title="הוספה בדיבור">🎤</button>
-      <input id="newQuantity" class="quantity-input" type="number" min="1" max="99" value="1" aria-label="כמות">
-      <button id="addBtn" class="primary">הוספה</button>
-    </div>
-    <div class="list-tools"><button id="shoppingModeBtn" type="button" class="secondary-action">🛒 מצב קניות</button><button id="favoritesBtn" type="button" class="secondary-action">⭐ מוצרים קבועים</button><button id="historyBtn" type="button" class="secondary-action">🕘 היסטוריית מוצרים</button><button id="pdfBtn" type="button" class="secondary-action">📄 PDF לקטגוריה</button></div>
-    <section id="historyPanel" class="history-panel hidden"><h3>מוצרים שהוספת בעבר</h3><p>אפשר להוסיף אותם שוב לרשימה בלחיצה.</p><div id="historyProducts" class="history-products"></div></section>
-    <div id="products" class="products"></div>
+    <section class="last-card panel">
+      <div class="section-heading"><div><span class="eyebrow">העדכון האחרון</span><h3>ההאכלה האחרונה</h3></div><span class="last-icon">🍼</span></div>
+      <div id="lastFeed" class="last-feed empty">עדיין לא נרשמו האכלות</div>
+    </section>
+
+    <section class="panel add-panel">
+      <div class="section-heading"><div><span class="eyebrow">רישום חדש</span><h3>רישום האכלה</h3></div><span class="add-icon">＋</span></div>
+      <form id="feedForm">
+        <div class="field"><label for="fedAt">מתי אכלה?</label><input id="fedAt" type="datetime-local" required></div>
+        <div class="field"><label>סוג האכלה</label><div class="type-options"><button type="button" class="type-option active" data-type="בקבוק">🍼 בקבוק</button><button type="button" class="type-option" data-type="הנקה">🤱 הנקה</button><button type="button" class="type-option" data-type="אחר">אחר</button></div></div>
+        <div id="bottleFields" class="field"><label for="amountMl">כמות (מ״ל), אם רלוונטי</label><input id="amountMl" type="number" min="1" max="2000" inputmode="numeric" placeholder="למשל 60"></div>
+        <div id="nursingFields" class="field hidden"><label for="durationMinutes">משך הנקה בדקות, אם רוצים</label><input id="durationMinutes" type="number" min="1" max="300" inputmode="numeric" placeholder="למשל 15"><label for="side" class="sub-label">צד</label><select id="side"><option value="">לא צוין</option><option value="ימין">ימין</option><option value="שמאל">שמאל</option><option value="שניהם">שניהם</option></select></div>
+        <div class="field"><label for="feedNextDue">מתי הארוחה הבאה? (לא חובה)</label><input id="feedNextDue" type="datetime-local"></div>
+        <div class="field"><label for="notes">הערות (לא חובה)</label><input id="notes" type="text" maxlength="500" placeholder="הערה קצרה"></div>
+        <button class="primary full save-feed" type="submit">שמירת ההאכלה</button>
+      </form>
+    </section>
+
+    <section class="history-section">
+      <div class="history-title"><div><span class="eyebrow">כל הרישומים</span><h3>היסטוריית האכלות</h3></div><span id="feedCount" class="count-pill">0</span></div>
+      <div id="feedHistory" class="feed-history"><div class="empty-history">כאן יופיעו ההאכלות שתשמרו</div></div>
+    </section>
+    <p class="footer-note">המעקב נועד לתיעוד ולארגון בלבד ואינו מחליף הנחיות רפואיות.</p>
   </section>
 </main>
-<script src="/app.js?v=20261122-homepdf1"></script>
-</body>
-</html>
+<div id="editModal" class="modal hidden" role="dialog" aria-modal="true">
+ <div class="modal-card"><div class="modal-head"><h3>עריכת האכלה</h3><button id="closeEdit" type="button" class="close-btn">×</button></div>
+ <form id="editForm">
+  <input id="editId" type="hidden">
+  <div class="field"><label for="editFedAt">מתי אכלה?</label><input id="editFedAt" type="datetime-local" required></div>
+  <div class="field"><label for="editType">סוג האכלה</label><select id="editType"><option>בקבוק</option><option>הנקה</option><option>אחר</option></select></div>
+  <div class="field"><label for="editAmount">כמות (מ״ל)</label><input id="editAmount" type="number" min="1" max="2000"></div>
+  <div class="field"><label for="editDuration">משך בדקות</label><input id="editDuration" type="number" min="1" max="300"></div>
+  <div class="field"><label for="editSide">צד</label><select id="editSide"><option value="">לא צוין</option><option>ימין</option><option>שמאל</option><option>שניהם</option></select></div>
+  <div class="field"><label for="editNext">הארוחה הבאה</label><input id="editNext" type="datetime-local"></div>
+  <div class="field"><label for="editNotes">הערות</label><input id="editNotes" maxlength="500"></div>
+  <button class="primary full" type="submit">שמירת שינויים</button>
+ </form></div>
+</div>
+<script src="/app.js?v=20261125-baby1"></script>
+</body></html>
