@@ -1,10 +1,12 @@
-import { getDB, validCredentials, json, error } from "./_db.js";
+import { getDB, json, error } from "./_db.js";
+
+const FAMILY = "המשפחה שלנו";
 
 export async function onRequestPost({ request, env }) {
   try {
     const body = await request.json();
-    const { family, password, action } = body;
-    if (!await validCredentials(family, password)) return error("פרטי הכניסה שגויים", 401);
+    const { action } = body;
+    const family = FAMILY;
     const db = await getDB(env);
 
     if (action === "load") {
