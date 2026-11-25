@@ -22,6 +22,8 @@ export async function getDB(env) {
     "CREATE TABLE IF NOT EXISTS shopping_item_history (id TEXT PRIMARY KEY, family_name TEXT NOT NULL, list_id TEXT NOT NULL, item_name TEXT NOT NULL, add_count INTEGER NOT NULL DEFAULT 1, last_added_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, UNIQUE(family_name, list_id, item_name))",
     "CREATE TABLE IF NOT EXISTS baby_feeds (id TEXT PRIMARY KEY, family_name TEXT NOT NULL, fed_at TEXT NOT NULL, feed_type TEXT NOT NULL, amount_ml INTEGER, duration_minutes INTEGER, side TEXT, next_due_at TEXT, notes TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)",
     "CREATE TABLE IF NOT EXISTS baby_feed_settings (family_name TEXT PRIMARY KEY, next_due_at TEXT)",
+    "CREATE TABLE IF NOT EXISTS baby_diapers (id TEXT PRIMARY KEY, family_name TEXT NOT NULL, changed_at TEXT NOT NULL, diaper_type TEXT NOT NULL, notes TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)",
+    "CREATE INDEX IF NOT EXISTS idx_baby_diapers_family_time ON baby_diapers(family_name, changed_at)",
     "CREATE INDEX IF NOT EXISTS idx_baby_feeds_family_time ON baby_feeds(family_name, fed_at)",
     "CREATE INDEX IF NOT EXISTS idx_lists_owner ON shopping_lists(owner_family)",
     "CREATE INDEX IF NOT EXISTS idx_items_list ON shopping_items(list_id)",
