@@ -44,6 +44,15 @@ $("feedForm").onsubmit=async e=>{e.preventDefault();const payload={fedAt:$("fedA
 $("saveNextBtn").onclick=async()=>{try{const d=await api("setNext",{nextDueAt:$("nextDueInput").value});nextDue=d.nextDueAt||"";renderNext()}catch(e){alert(e.message)}};
 $("editForm").onsubmit=async e=>{e.preventDefault();const payload={id:$("editId").value,fedAt:$("editFedAt").value,feedType:$("editType").value,amountMl:$("editAmount").value,durationMinutes:$("editDuration").value,side:$("editSide").value,nextDueAt:$("editNext").value,notes:$("editNotes").value};try{await api("update",payload);if(payload.nextDueAt)nextDue=payload.nextDueAt;await load();render();closeEdit()}catch(err){alert(err.message)}};
 $("closeEdit").onclick=closeEdit;$("editModal").addEventListener("click",e=>{if(e.target===$("editModal"))closeEdit()});
-$("tracker").classList.remove("hidden");
+
+$("refreshBtn").onclick=async()=>{
+ const btn=$("refreshBtn");
+ if(btn.disabled)return;
+ btn.disabled=true;btn.textContent="↻ מסנכרן…";
+ try{await load();render();btn.textContent="✓ עודכן"}
+ catch(e){alert("לא הצלחנו לסנכרן: "+e.message);btn.textContent="↻ רענון"}
+ finally{setTimeout(()=>{btn.disabled=false;btn.textContent="↻ רענון"},1200)}
+};
+\n$("tracker").classList.remove("hidden");
 load().then(render).catch(e=>{alert("לא הצלחנו לטעון את המעקב: "+e.message)});
 setInterval(()=>{renderNext();scheduleReminder()},15000);
