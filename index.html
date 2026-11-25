@@ -5,27 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f7f8fc">
 <link rel="manifest" href="/manifest.json">
-<link rel="stylesheet" href="/style.css?v=20261125-baby1">
+<link rel="stylesheet" href="/style.css?v=20261125-baby2">
 <title>ההאכלות של הקטנה</title>
 </head>
 <body>
 <header class="topbar">
-  <div class="brand"><div class="brand-mark">♡</div><div><h1>ההאכלות של הקטנה</h1><p id="subtitle">מעקב קטן, שקט ומסודר</p></div></div>
+  <div class="brand"><div class="brand-mark">♡</div><div><h1>ההאכלות של הקטנה</h1><p id="subtitle">המעקב שלנו</p></div></div>
   <button id="themeBtn" class="theme-btn" type="button" aria-label="החלפת מצב תצוגה">☾</button>
 </header>
 <main>
-  <section id="login" class="panel login">
-    <div class="hero-icon">🍼</div>
-    <h2>ברוכים הבאים</h2>
-    <p>בחרו את המשפחה והיכנסו למעקב האכלות</p>
-    <div id="familyChoices" class="family-grid"></div>
-    <input id="password" type="password" placeholder="סיסמת המשפחה" autocomplete="current-password">
-    <button id="loginBtn" class="primary full">כניסה למעקב</button>
-    <p id="loginError" class="error"></p>
-  </section>
-
-  <section id="tracker" class="hidden">
-    <div class="welcome-row"><div><span class="eyebrow">היומן של הקטנה</span><h2>מעקב האכלות</h2></div><button id="switchBtn" class="text-btn" type="button">החלפת משפחה</button></div>
+  <section id="tracker">
+    <div class="welcome-row"><div><span class="eyebrow">היומן של הקטנה</span><h2>מעקב האכלות</h2></div></div>
     <section class="next-card">
       <div class="next-top"><span>⏰ הארוחה הבאה</span><span id="nextStatus" class="status-pill">ממתין לעדכון</span></div>
       <div id="nextTime" class="next-time">לא הוגדרה שעה</div>
@@ -33,12 +23,10 @@
       <div class="next-edit"><label for="nextDueInput">שעת הארוחה הבאה</label><input id="nextDueInput" type="datetime-local"><button id="saveNextBtn" class="outline-btn" type="button">שמירת שעה</button></div>
       <p class="hint">השעה נקבעת על ידכם לפי ההנחיות שקיבלתם. אפשר לשנות בכל רגע.</p>
     </section>
-
     <section class="last-card panel">
       <div class="section-heading"><div><span class="eyebrow">העדכון האחרון</span><h3>ההאכלה האחרונה</h3></div><span class="last-icon">🍼</span></div>
       <div id="lastFeed" class="last-feed empty">עדיין לא נרשמו האכלות</div>
     </section>
-
     <section class="panel add-panel">
       <div class="section-heading"><div><span class="eyebrow">רישום חדש</span><h3>רישום האכלה</h3></div><span class="add-icon">＋</span></div>
       <form id="feedForm">
@@ -51,7 +39,6 @@
         <button class="primary full save-feed" type="submit">שמירת ההאכלה</button>
       </form>
     </section>
-
     <section class="history-section">
       <div class="history-title"><div><span class="eyebrow">כל הרישומים</span><h3>היסטוריית האכלות</h3></div><span id="feedCount" class="count-pill">0</span></div>
       <div id="feedHistory" class="feed-history"><div class="empty-history">כאן יופיעו ההאכלות שתשמרו</div></div>
@@ -73,5 +60,5 @@
   <button class="primary full" type="submit">שמירת שינויים</button>
  </form></div>
 </div>
-<script src="/app.js?v=20261125-baby1"></script>
+<script src="/app.js?v=20261125-baby2"></script>
 </body></html>
