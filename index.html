@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f7f8fc">
 <link rel="manifest" href="/manifest.json">
-<link rel="stylesheet" href="/style.css?v=20261125-baby2">
+<link rel="stylesheet" href="/style.css?v=20261125-baby3">
 <title>ההאכלות של הקטנה</title>
 </head>
 <body>
@@ -23,6 +23,7 @@
       <div class="next-edit"><label for="nextDueInput">שעת הארוחה הבאה</label><input id="nextDueInput" type="datetime-local"><button id="saveNextBtn" class="outline-btn" type="button">שמירת שעה</button></div>
       <p class="hint">השעה נקבעת על ידכם לפי ההנחיות שקיבלתם. אפשר לשנות בכל רגע.</p>
     </section>
+    <button id="quickFeedBtn" class="quick-feed-btn" type="button">🍼 רישום האכלה עכשיו</button>
     <section class="last-card panel">
       <div class="section-heading"><div><span class="eyebrow">העדכון האחרון</span><h3>ההאכלה האחרונה</h3></div><span class="last-icon">🍼</span></div>
       <div id="lastFeed" class="last-feed empty">עדיין לא נרשמו האכלות</div>
@@ -51,7 +52,7 @@
  <form id="editForm">
   <input id="editId" type="hidden">
   <div class="field"><label for="editFedAt">מתי אכלה?</label><input id="editFedAt" type="datetime-local" required></div>
-  <div class="field"><label for="editType">סוג האכלה</label><select id="editType"><option>בקבוק</option><option>הנקה</option><option>אחר</option></select></div>
+  <div class="field"><label for="editType">סוג האכלה</label><select id="editType"><option>בקבוק</option><option>הנקה</option><option>אחר</option><option>רישום מהיר</option></select></div>
   <div class="field"><label for="editAmount">כמות (מ״ל)</label><input id="editAmount" type="number" min="1" max="2000"></div>
   <div class="field"><label for="editDuration">משך בדקות</label><input id="editDuration" type="number" min="1" max="300"></div>
   <div class="field"><label for="editSide">צד</label><select id="editSide"><option value="">לא צוין</option><option>ימין</option><option>שמאל</option><option>שניהם</option></select></div>
@@ -60,5 +61,5 @@
   <button class="primary full" type="submit">שמירת שינויים</button>
  </form></div>
 </div>
-<script src="/app.js?v=20261125-baby2"></script>
+<script src="/app.js?v=20261125-baby3"></script>
 </body></html>
