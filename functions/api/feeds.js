@@ -48,6 +48,7 @@ export async function onRequestPost({ request, env }) {
       const result = await db.prepare("UPDATE baby_feeds SET fed_at=?, feed_type=?, amount_ml=?, duration_minutes=?, side=?, next_due_at=?, notes=? WHERE id=? AND family_name=?")
         .bind(fedAt, feedType, amount, duration, side || null, nextDueAt || null, String(notes || "").slice(0, 500), id, family).run();
       if (!result.meta?.changes) return error("הרישום לא נמצא", 404);
+      await db.prepare("INSERT INTO baby_feed_settings (family_name, next_due_at) VALUES (?, ?) ON CONFLICT(family_name) DO UPDATE SET next_due_at = excluded.next_due_at").bind(family, nextDueAt || null).run();
       return json({ ok: true });
     }
 
