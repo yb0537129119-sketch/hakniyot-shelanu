@@ -28,3 +28,5 @@ input,select{width:100%;min-width:0;border:1px solid var(--line);border-radius:1
 @media(max-width:520px){.topbar{padding:16px 16px 10px}.brand h1{font-size:19px}main{padding:8px 15px 38px}.panel{padding:17px;border-radius:19px}.next-card{padding:18px}.next-time{font-size:25px}.feed-row{padding:12px;gap:9px}.feed-row-top{display:block}.feed-row-top span{display:block;margin-top:2px}.feed-actions button{padding:7px}.welcome-row h2{font-size:22px}}
 
 .quick-feed-btn{display:block;width:100%;margin:0 0 15px;padding:18px 16px;border:0;border-radius:18px;background:var(--green-dark);color:#fff;font:inherit;font-size:18px;font-weight:850;box-shadow:0 8px 20px rgba(49,122,93,.2);cursor:pointer}.quick-feed-btn:disabled{opacity:.65;cursor:wait}
+
+.diaper-panel{margin:0 0 24px}.diaper-history-title{font-size:14px;font-weight:800;margin:20px 0 10px;color:var(--green-dark)}.reminder-row{display:grid;gap:8px;margin-top:14px}.reminder-row .hint{margin:0;line-height:1.5}
