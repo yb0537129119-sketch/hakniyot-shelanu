@@ -11,7 +11,15 @@ export async function onRequestPost({ request, env }) {
       const { results = [] } = await db.prepare(
         "SELECT id, fed_at AS fedAt, feed_type AS feedType, amount_ml AS amountMl, duration_minutes AS durationMinutes, side, next_due_at AS nextDueAt, notes FROM baby_feeds WHERE family_name = ? ORDER BY fed_at DESC LIMIT 200"
       ).bind(family).all();
-      return json({ feeds: results });
+      const setting = await db.prepare("SELECT next_due_at AS nextDueAt FROM baby_feed_settings WHERE family_name = ?").bind(family).first();
+      return json({ feeds: results, nextDueAt: setting?.nextDueAt || results.find(x => x.nextDueAt)?.nextDueAt || null });
+    }
+
+    if (action === "setNext") {
+      const value = body.nextDueAt || null;
+      if (value && Number.isNaN(Date.parse(value))) return error("שעת ההאכלה הבאה לא תקינה");
+      await db.prepare("INSERT INTO baby_feed_settings (family_name, next_due_at) VALUES (?, ?) ON CONFLICT(family_name) DO UPDATE SET next_due_at = excluded.next_due_at").bind(family, value).run();
+      return json({ ok: true, nextDueAt: value });
     }
 
     if (action === "add") {
@@ -26,6 +34,7 @@ export async function onRequestPost({ request, env }) {
       const id = crypto.randomUUID();
       await db.prepare("INSERT INTO baby_feeds (id, family_name, fed_at, feed_type, amount_ml, duration_minutes, side, next_due_at, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
         .bind(id, family, fedAt, feedType, amount, duration, side || null, nextDueAt || null, String(notes || "").slice(0, 500)).run();
+      if (nextDueAt) await db.prepare("INSERT INTO baby_feed_settings (family_name, next_due_at) VALUES (?, ?) ON CONFLICT(family_name) DO UPDATE SET next_due_at = excluded.next_due_at").bind(family, nextDueAt).run();
       return json({ ok: true, id }, 201);
     }
 
